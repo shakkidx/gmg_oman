@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script>try{var l=localStorage.getItem("gmg_lang")||((navigator.language||"").toLowerCase().indexOf("ar")===0?"ar":"en");document.documentElement.lang=l;document.documentElement.dir=l==="ar"?"rtl":"ltr";}catch(e){}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>Shop — Global Markets Gateway</title>
+<meta name="description" content="Browse MEVRIO GaN chargers, magnetic power banks, car chargers and braided cables. Delivery across Oman.">
+<link rel="icon" type="image/png" href="/images/brand/favicon.png?v=20261028">
+<link rel="apple-touch-icon" href="/images/brand/apple-touch-icon.png?v=20261028">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Sora:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/store.css?v=20261028a">
+<script src="/js/core.js?v=20261028a" defer></script>
+<script src="/js/shop.js?v=20261028a" defer></script>
+</head>
+<body>
+<div id="site-header"></div>
+<main>
+  <div class="wrap page-head">
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="/" data-i18n>Home</a><span aria-hidden="true">/</span><span id="crumbHere" data-i18n>Shop</span></nav>
+    <h1 id="shopTitle" data-i18n>All products</h1>
+    <p id="shopDesc" data-i18n>Fast chargers, power banks and cables — everything to keep your devices going.</p>
+  </div>
+  <div class="toolbar">
+    <div class="wrap toolbar-row">
+      <div class="chips" id="chips" role="tablist" aria-label="Categories"></div>
+      <label class="select"><span class="sr-only" data-i18n>Sort by</span>
+        <select id="sort" data-i18n-opt>
+          <option value="featured">Featured</option>
+          <option value="bestselling">Best selling</option>
+          <option value="price_asc">Price: low to high</option>
+          <option value="price_desc">Price: high to low</option>
+          <option value="newest">Newest</option>
+        </select>
+      </label>
+    </div>
+  </div>
+  <div class="wrap" style="padding-bottom:80px">
+    <p class="result-count" id="resultCount" aria-live="polite"></p>
+    <div class="grid" id="grid"></div>
+  </div>
+</main>
+<div id="site-footer"></div>
+</body>
+</html>

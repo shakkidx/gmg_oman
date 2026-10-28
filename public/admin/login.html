@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#081634">
+<title>Admin sign in — Global Markets Gateway</title>
+<link rel="icon" type="image/png" href="/images/brand/favicon.png?v=20261028">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Sora:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/admin.css?v=20261028a">
+</head>
+<body>
+<div class="login">
+  <form class="login-card" id="loginForm">
+    <img src="/images/brand/logo-horizontal.png?v=20261028" alt="Global Markets Gateway">
+    <h1>Store admin</h1>
+    <p>Sign in to manage products and orders.</p>
+    <div class="banner bad" id="err" hidden></div>
+    <div class="fgrid">
+      <div class="f"><label for="u">Username</label><input id="u" autocomplete="username" required autofocus></div>
+      <div class="f"><label for="p">Password</label><input id="p" type="password" autocomplete="current-password" required></div>
+      <button class="btn btn-primary btn-block" style="height:48px" type="submit" id="go">Sign in</button>
+    </div>
+  </form>
+</div>
+<script>
+document.getElementById('loginForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = document.getElementById('go'); const err = document.getElementById('err');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Signing in…'; err.hidden = true;
+  try {
+    const res = await fetch('/api/admin/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: document.getElementById('u').value.trim(), password: document.getElementById('p').value }) });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.error || 'Sign in failed');
+    localStorage.setItem('gmg_admin_token', data.token);
+    localStorage.setItem('gmg_admin_user', JSON.stringify(data.user));
+    if (data.mustChangePassword) localStorage.setItem('gmg_admin_mustchange', '1'); else localStorage.removeItem('gmg_admin_mustchange');
+    location.href = '/admin/';
+  } catch (ex) {
+    err.textContent = ex.message; err.hidden = false;
+    btn.disabled = false; btn.textContent = 'Sign in';
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script>try{var l=localStorage.getItem("gmg_lang")||((navigator.language||"").toLowerCase().indexOf("ar")===0?"ar":"en");document.documentElement.lang=l;document.documentElement.dir=l==="ar"?"rtl":"ltr";}catch(e){}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>Contact us — Global Markets Gateway</title>
+<meta name="description" content="Talk to Global Markets Gateway in Muscat by WhatsApp, phone or email.">
+<link rel="icon" type="image/png" href="/images/brand/favicon.png?v=20261028">
+<link rel="apple-touch-icon" href="/images/brand/apple-touch-icon.png?v=20261028">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Sora:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/store.css?v=20261028a">
+<script src="/js/core.js?v=20261028a" defer></script>
+</head>
+<body>
+<div id="site-header"></div>
+<main>
+  <div class="wrap page-head">
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="/" data-i18n>Home</a><span aria-hidden="true">/</span><span data-i18n>Contact us</span></nav>
+    <h1 data-i18n>We’re here to help</h1>
+    <p data-i18n>Questions about a product, an order or a delivery? The fastest way to reach us is WhatsApp.</p>
+  </div>
+  <div class="wrap contact-grid" id="contactGrid"></div>
+</main>
+<div id="site-footer"></div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const { I, esc, storeReady, t } = window.GMG;
+  storeReady.then(s => {
+    const wa = (s.whatsapp || '').replace(/\D/g, '');
+    document.getElementById('contactGrid').innerHTML = [
+      wa && `<a class="contact-card" href="https://wa.me/${wa}" target="_blank" rel="noopener">${I.wa.replace('<svg', '<svg style="color:#25d366"')}<h3>${t('WhatsApp')}</h3><p>${t('Chat with our team — usually replies within minutes during working hours.')}</p><b dir="ltr">${esc(s.whatsapp)}</b></a>`,
+      s.phone && `<a class="contact-card" href="tel:${esc(s.phone.replace(/\s/g, ''))}">${I.phone}<h3>${t('Call us')}</h3><p>${t('Saturday – Thursday, 9 am – 9 pm.')}</p><b dir="ltr">${esc(s.phone)}</b></a>`,
+      s.email && `<a class="contact-card" href="mailto:${esc(s.email)}">${I.mail}<h3>${t('Email')}</h3><p>${t('For orders, warranty and business enquiries.')}</p><b>${esc(s.email)}</b></a>`,
+      s.address && `<div class="contact-card">${I.pin}<h3>${t('Visit us')}</h3><p>${esc(s.address)}</p><b>${esc(s.legal_name || '')}</b><p style="font-size:13px">${[s.cr_number && t('CR') + ' ' + esc(s.cr_number), s.tax_number && t('Tax ID') + ' ' + esc(s.tax_number)].filter(Boolean).join(' · ')}</p></div>`,
+      `<a class="contact-card" href="/track">${I.truck}<h3>${t('Track an order')}</h3><p>${t('Check the status of your delivery with your order number.')}</p><b>${t('Track order →')}</b></a>`
+    ].filter(Boolean).join('');
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script>try{var l=localStorage.getItem("gmg_lang")||((navigator.language||"").toLowerCase().indexOf("ar")===0?"ar":"en");document.documentElement.lang=l;document.documentElement.dir=l==="ar"?"rtl":"ltr";}catch(e){}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>Checkout — Global Markets Gateway</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" href="/images/brand/favicon.png?v=20261028">
+<link rel="apple-touch-icon" href="/images/brand/apple-touch-icon.png?v=20261028">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Sora:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/store.css?v=20261028a">
+<script src="/js/core.js?v=20261028a" defer></script>
+<script src="/js/checkout.js?v=20261028a" defer></script>
+</head>
+<body>
+<div id="site-header"></div>
+<main>
+  <div class="wrap page-head">
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="/cart" data-i18n>Cart</a><span aria-hidden="true">/</span><span data-i18n>Checkout</span></nav>
+    <h1 data-i18n>Checkout</h1>
+  </div>
+  <div class="wrap">
+    <div id="coAlerts"></div>
+    <div class="checkout-layout" id="coLayout">
+      <form id="coForm" novalidate>
+        <section class="co-step">
+          <h2><span class="n">1</span><span data-i18n>Contact</span></h2>
+          <div class="fields two">
+            <div class="field"><label for="fName" data-i18n>Full name</label><input id="fName" name="customerName" autocomplete="name" required><p class="err" data-i18n>Please enter your name.</p></div>
+            <div class="field"><label for="fPhone" data-i18n>Mobile number</label><div class="phone-input"><span>+968</span><input id="fPhone" name="customerPhone" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="9123 4567" required></div><p class="err" data-i18n>Enter an 8-digit Omani mobile number.</p></div>
+          </div>
+          <div class="fields" style="margin-top:14px">
+            <div class="field"><label for="fEmail"><span data-i18n>Email</span> <span class="opt" data-i18n>(optional — for your receipt)</span></label><input id="fEmail" name="customerEmail" type="email" autocomplete="email"><p class="err" data-i18n>That email doesn't look right.</p></div>
+          </div>
+        </section>
+
+        <section class="co-step">
+          <h2><span class="n">2</span><span data-i18n>Delivery address</span></h2>
+          <div class="fields two">
+            <div class="field"><label for="fGov" data-i18n>Governorate</label><select id="fGov" name="deliveryGovernorate" required><option value="">Select governorate</option></select><p class="err" data-i18n>Please choose a governorate.</p></div>
+            <div class="field"><label for="fCity" data-i18n>City / Wilayat / Area</label><input id="fCity" name="deliveryCity" autocomplete="address-level2" placeholder="e.g. Al Khuwair" data-i18n-ph required><p class="err" data-i18n>Please enter your area.</p></div>
+          </div>
+          <div class="fields" style="margin-top:14px">
+            <div class="field"><label for="fAddr" data-i18n>Address details</label><input id="fAddr" name="deliveryAddress" autocomplete="street-address" placeholder="Way, building / villa no., flat, landmark" data-i18n-ph required><p class="err" data-i18n>Please add your address details.</p></div>
+            <div class="field"><label for="fNotes"><span data-i18n>Delivery notes</span> <span class="opt" data-i18n>(optional)</span></label><textarea id="fNotes" name="customerNotes" placeholder="Best time to call, location pin, etc." data-i18n-ph></textarea></div>
+          </div>
+        </section>
+
+        <section class="co-step">
+          <h2><span class="n">3</span><span data-i18n>Payment</span></h2>
+          <div class="pay-options" id="payOptions"></div>
+        </section>
+      </form>
+
+      <aside class="summary is-collapsible" id="coSummary" aria-label="Order summary">
+        <button type="button" class="mobile-summary-toggle" id="sumToggle" aria-expanded="false"><span data-i18n>Show order summary</span><b id="sumToggleTotal"></b></button>
+        <h2 class="desk-only" style="margin-top:4px" data-i18n>Order summary</h2>
+        <div class="co-items" id="coItems" style="margin-top:14px"></div>
+        <div id="coTotals"></div>
+        <button class="btn btn-primary btn-block" type="submit" form="coForm" id="placeBtn" data-i18n>Place order</button>
+        <p class="secure-note" id="secureNote"></p>
+      </aside>
+    </div>
+  </div>
+</main>
+<div id="site-footer"></div>
+</body>
+</html>
