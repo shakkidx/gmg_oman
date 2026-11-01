@@ -45,6 +45,8 @@ const UPDATE_2026_11_01_B = {
 function applyCatalogUpdates(db) {
   apply20261101(db);
   apply20261101b(db);
+  // 2026-11-01 (c) — real WhatsApp number (only replaces the old placeholder, never an admin's own edit)
+  db.prepare("UPDATE settings SET value = '+968 96070785', updated_at = CURRENT_TIMESTAMP WHERE key = 'contact_whatsapp' AND value = '+968 91234567'").run();
 }
 
 const isDone = (db, key) => !!db.prepare('SELECT 1 FROM settings WHERE key = ?').get(key);

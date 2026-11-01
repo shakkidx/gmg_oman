@@ -59,7 +59,7 @@ function seed() {
       { key: 'other_delivery_fee_baisa', value: '2500', category: 'shipping', description: 'Interior Governorates delivery in Baisa (2.500 OMR)' },
       { key: 'contact_email', value: 'sales@globalmarketsgateway.om', category: 'contact', description: 'Customer Support Email' },
       { key: 'contact_phone', value: '+968 24 998877', category: 'contact', description: 'Main Phone Number' },
-      { key: 'contact_whatsapp', value: '+968 91234567', category: 'contact', description: 'Customer Care WhatsApp' },
+      { key: 'contact_whatsapp', value: '+968 96070785', category: 'contact', description: 'Customer Care WhatsApp' },
       { key: 'store_address', value: 'South Al Khuwair, Bousher, Muscat, Sultanate of Oman', category: 'contact', description: 'Store Physical Address' },
       { key: 'contact_instagram', value: '', category: 'contact', description: 'Instagram profile URL (optional)' },
       { key: 'store_legal_name', value: 'Global Markets Gateway LLC', category: 'general', description: 'Registered company name' },
