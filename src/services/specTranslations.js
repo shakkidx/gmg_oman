@@ -5,6 +5,13 @@
  * Anything not listed here is shown as entered (numbers, model codes, etc.).
  */
 const KEYS = {
+  'Fast Charging': 'الشحن السريع',
+  'Thickness': 'السماكة',
+  'Body': 'الهيكل',
+  'Magnet': 'المغناطيس',
+  'Design': 'التصميم',
+  'Max Output': 'أقصى إخراج',
+  'Cable': 'الكابل',
   'Capacity': 'السعة',
   'Wireless Output': 'الإخراج اللاسلكي',
   'Type-C PD Output': 'إخراج Type-C PD',
@@ -62,6 +69,23 @@ const KEYS = {
 };
 
 const VALUES = {
+  '5,000mAh': '5,000 مللي أمبير',
+  'PD 20W': 'PD بقوة 20 واط',
+  '0.89 cm': '0.89 سم',
+  'Aerospace aluminium': 'ألومنيوم الطيران',
+  '8N super magnetic': 'مغناطيس فائق القوة 8N',
+  'Premium cobalt cells': 'خلايا كوبالت فاخرة',
+  'Magnetic, super slim': 'مغناطيسي، نحيف جداً',
+  'Silver': 'فضي',
+  '66W': '66 واط',
+  'Built-in': 'مدمج',
+  '3-in-1 magnetic': 'مغناطيسي 3 في 1',
+  'USB-C to 2× USB-C + Lightning': 'USB-C إلى قابسين USB-C + Lightning',
+  'USB-C 65W / Lightning 30W': 'USB-C بقوة 65 واط / Lightning بقوة 30 واط',
+  'Nylon braided + aluminium alloy': 'نايلون مجدول + سبائك ألومنيوم',
+  'USB-C 45W': 'USB-C بقوة 45 واط',
+  'USB-A QC 18W': 'USB-A QC بقوة 18 واط',
+  'GaN (Gallium Nitride)': 'GaN (نيتريد الغاليوم)',
   '65W Power Delivery (PD)': '65 واط Power Delivery (PD)',
   '1.5 Meters': '1.5 متر',
   'Type-C to Type-C': 'Type-C إلى Type-C',
