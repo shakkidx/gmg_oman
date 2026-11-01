@@ -62,6 +62,11 @@ const KEYS = {
 };
 
 const VALUES = {
+  '65W Power Delivery (PD)': '65 واط Power Delivery (PD)',
+  '1.5 Meters': '1.5 متر',
+  'Type-C to Type-C': 'Type-C إلى Type-C',
+  '480 Mbps': '480 ميجابت/ث',
+  '5,000+ bends, braided jacket': 'أكثر من 5,000 انحناءة، غلاف مجدول',
   '15W Max / 10W / 7.5W / 5W': '15 واط كحد أقصى / 10 / 7.5 / 5 واط',
   '20W Max (5V/3A, 9V/2.22A, 12V/1.67A)': '20 واط كحد أقصى (5V/3A، 9V/2.22A، 12V/1.67A)',
   '102 x 65 x 11 mm': '102 × 65 × 11 ملم',
