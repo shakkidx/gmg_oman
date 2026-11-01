@@ -3,12 +3,32 @@ const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
 
-const DB_DIR = path.resolve(__dirname, '../../data');
+const { DATA_DIR, APP_ROOT, findInOldBuilds } = require('./storage');
+
+const DB_DIR = DATA_DIR;
 if (!fs.existsSync(DB_DIR)) {
   fs.mkdirSync(DB_DIR, { recursive: true });
 }
 
 const DB_PATH = process.env.DATABASE_PATH || path.join(DB_DIR, 'store.db');
+
+// First start with the new storage location: bring over the database from the app folder or
+// from the previous Hostinger build, so orders, settings and the admin password are kept.
+if (!process.env.DATABASE_PATH && !fs.existsSync(DB_PATH)) {
+  const local = path.join(APP_ROOT, 'data', 'store.db');
+  const source = (local !== DB_PATH && fs.existsSync(local)) ? local : findInOldBuilds(path.join('data', 'store.db'));
+  if (source) {
+    try {
+      for (const ext of ['', '-wal', '-shm']) {
+        if (fs.existsSync(source + ext)) fs.copyFileSync(source + ext, DB_PATH + ext);
+      }
+      console.log(`Moved existing database to persistent storage: ${source} -> ${DB_PATH}`);
+    } catch (e) {
+      console.error('Could not copy the existing database:', e.message);
+    }
+  }
+}
+console.log(`Database file: ${DB_PATH}`);
 
 let dbInstance = null;
 

@@ -39,6 +39,19 @@ if (process.env.NODE_ENV !== 'test') {
 
 // 3. Static storefront + admin
 const PUBLIC_DIR = path.resolve(__dirname, '../public');
+
+// Uploaded product photos live in persistent storage (see config/storage.js) so redeploys keep them.
+// Photos uploaded before this change (inside an old build's public/uploads) are copied over once.
+{
+  const fs = require('fs');
+  const { UPLOADS_DIR, dirsInOldBuilds } = require('./config/storage');
+  const target = path.join(UPLOADS_DIR, 'products');
+  const dirs = [path.join(PUBLIC_DIR, 'uploads', 'products'), ...dirsInOldBuilds(path.join('public', 'uploads', 'products'))];
+  for (const d of dirs) {
+    try { for (const f of fs.readdirSync(d)) { const dst = path.join(target, f); if (f !== '.keep' && !fs.existsSync(dst)) fs.copyFileSync(path.join(d, f), dst); } } catch (e) { /* nothing to copy */ }
+  }
+  app.use('/uploads', express.static(UPLOADS_DIR, { maxAge: '7d' }));
+}
 app.use(express.static(PUBLIC_DIR, {
   // Pages, scripts and styles are re-checked on every visit so updates show immediately;
   // photos can be cached by the browser for a week.

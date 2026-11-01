@@ -8,7 +8,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { requireAdmin } = require('../../../middleware/auth');
 
-const UPLOAD_DIR = path.resolve(__dirname, '../../../../public/uploads/products');
+const UPLOAD_DIR = path.join(require('../../../config/storage').UPLOADS_DIR, 'products');
 const TYPES = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
 const MAX_BYTES = 8 * 1024 * 1024;
 
