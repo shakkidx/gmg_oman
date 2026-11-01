@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const { initializeDatabase, runTransaction } = require('../config/database');
 const { categories: catalogCategories, mevrioProducts } = require('./catalog');
+const { applyCatalogUpdates } = require('./catalogUpdates');
 
 /** Insert the MEVRIO categories, products and images. Caller wraps in a transaction. */
 function insertCatalog(db) {
@@ -117,6 +118,9 @@ function seed() {
     if (productCount === 0) {
       insertCatalog(db);
     }
+
+    // 4. ONE-TIME CATALOGUE UPDATES (price lists etc.)
+    applyCatalogUpdates(db);
   });
 }
 
