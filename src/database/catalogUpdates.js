@@ -134,7 +134,9 @@ function applyCatalogUpdates(db) {
   apply20261101b(db);
   apply20261101d(db);
   // 2026-11-01 (c) — real WhatsApp number (only replaces the old placeholder, never an admin's own edit)
-  db.prepare("UPDATE settings SET value = '+968 96070785', updated_at = CURRENT_TIMESTAMP WHERE key = 'contact_whatsapp' AND value = '+968 91234567'").run();
+  // 2026-11-01 (e) — phone and WhatsApp both +968 96114412 (only replaces the earlier placeholder/previous values)
+  db.prepare("UPDATE settings SET value = '+968 96114412', updated_at = CURRENT_TIMESTAMP WHERE key = 'contact_whatsapp' AND value IN ('+968 91234567', '+968 96070785')").run();
+  db.prepare("UPDATE settings SET value = '+968 96114412', updated_at = CURRENT_TIMESTAMP WHERE key = 'contact_phone' AND value = '+968 24 998877'").run();
 }
 
 const isDone = (db, key) => !!db.prepare('SELECT 1 FROM settings WHERE key = ?').get(key);
