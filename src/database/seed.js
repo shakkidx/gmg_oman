@@ -113,6 +113,18 @@ function seed() {
       `).run(uuidv4(), 'admin', passwordHash, 'System Administrator', 'admin@globalmarketsgateway.om', 'superadmin');
     }
 
+    // 2b. EMERGENCY PASSWORD RESET — set ADMIN_RESET_PASSWORD in the hosting environment, restart,
+    // sign in with it, then delete the variable. Also re-enables the 'admin' account.
+    const resetPw = (process.env.ADMIN_RESET_PASSWORD || '').trim();
+    if (resetPw.length >= 8) {
+      const hash = bcrypt.hashSync(resetPw, 10);
+      const exists = db.prepare('SELECT id FROM admin_users WHERE username = ?').get('admin');
+      if (exists) db.prepare('UPDATE admin_users SET password_hash = ?, is_active = 1 WHERE id = ?').run(hash, exists.id);
+      else db.prepare(`INSERT INTO admin_users (id, username, password_hash, full_name, email, role, is_active)
+        VALUES (?, 'admin', ?, 'System Administrator', 'admin@globalmarketsgateway.om', 'superadmin', 1)`).run(uuidv4(), hash);
+      console.warn('ADMIN_RESET_PASSWORD is set: the admin password was reset. Remove this variable after signing in.');
+    }
+
     // 3. SEED CATEGORIES & MEVRIO PRODUCTS (only when the catalogue is empty)
     const productCount = db.prepare('SELECT COUNT(*) AS c FROM products').get().c;
     if (productCount === 0) {

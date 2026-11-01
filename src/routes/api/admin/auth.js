@@ -19,7 +19,7 @@ router.post('/login', (req, res) => {
     }
 
     const db = getDatabase();
-    const user = db.prepare('SELECT * FROM admin_users WHERE username = ? AND is_active = 1').get(username);
+    const user = db.prepare('SELECT * FROM admin_users WHERE lower(username) = lower(?) AND is_active = 1').get(String(username).trim());
 
     if (!user) {
       return res.status(401).json({ success: false, error: 'Invalid username or password.' });
