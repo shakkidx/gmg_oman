@@ -52,6 +52,44 @@ const PUBLIC_DIR = path.resolve(__dirname, '../public');
   }
   app.use('/uploads', express.static(UPLOADS_DIR, { maxAge: '7d' }));
 }
+let serveGz = () => false;
+// Gzip text files (CSS/JS/HTML/SVG) once and keep them in memory — mobile pages load several times faster.
+// Files requested with ?v=… are versioned, so browsers and the CDN may keep them for a year.
+{
+  const fs = require('fs');
+  const zlib = require('zlib');
+  const TYPES = { '.css': 'text/css; charset=utf-8', '.js': 'application/javascript; charset=utf-8', '.html': 'text/html; charset=utf-8', '.svg': 'image/svg+xml' };
+  const cache = new Map();
+  serveGz = (req, res, rel) => {
+    if (req.method !== 'GET' && req.method !== 'HEAD') return false;
+    if (!/\bgzip\b/.test(req.headers['accept-encoding'] || '')) return false;
+    if (rel.endsWith('/')) rel += 'index.html';
+    const type = TYPES[path.extname(rel)];
+    if (!type || rel.includes('..')) return false;
+    const file = path.join(PUBLIC_DIR, rel);
+    let st; try { st = fs.statSync(file); } catch (e) { return false; }
+    if (!st.isFile()) return false;
+    let hit = cache.get(file);
+    if (!hit || hit.mtime !== st.mtimeMs) {
+      hit = { mtime: st.mtimeMs, gz: zlib.gzipSync(fs.readFileSync(file), { level: 9 }), etag: `"${st.size.toString(36)}-${Math.round(st.mtimeMs).toString(36)}"` };
+      cache.set(file, hit);
+    }
+    res.setHeader('Content-Type', type);
+    res.setHeader('Content-Encoding', 'gzip');
+    res.setHeader('Vary', 'Accept-Encoding');
+    res.setHeader('ETag', hit.etag);
+    res.setHeader('Cache-Control', req.query.v && type !== TYPES['.html'] ? 'public, max-age=31536000, immutable' : 'no-cache');
+    if (req.headers['if-none-match'] === hit.etag) { res.status(304).end(); return true; }
+    res.setHeader('Content-Length', hit.gz.length);
+    if (req.method === 'HEAD') res.end(); else res.end(hit.gz);
+    return true;
+  };
+  app.use((req, res, next) => {
+    let rel; try { rel = decodeURIComponent(req.path); } catch (e) { return next(); }
+    if (!serveGz(req, res, rel)) next();
+  });
+}
+
 app.use(express.static(PUBLIC_DIR, {
   // Pages, scripts and styles are re-checked on every visit so updates show immediately;
   // photos can be cached by the browser for a week.
@@ -71,7 +109,9 @@ app.use('/thumbs', (req, res) => {
 });
 
 // Clean URLs
-const page = file => (req, res) => res.sendFile(path.join(PUBLIC_DIR, file));
+const page = file => (req, res) => {
+  if (!serveGz(req, res, '/' + file)) res.sendFile(path.join(PUBLIC_DIR, file));
+};
 app.get('/shop', page('shop.html'));
 app.get('/category/:slug', page('shop.html'));
 app.get('/product/:slug', page('product.html'));

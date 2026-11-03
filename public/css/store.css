@@ -718,3 +718,6 @@ html[lang="ar"] [data-only="en"], html[lang="en"] [data-only="ar"] { display: no
 .lang-btn:hover { box-shadow: inset 0 0 0 1.5px var(--ink); color: var(--ink); }
 html[lang="en"] .lang-btn { font-family: 'IBM Plex Sans Arabic', sans-serif; }
 html[lang="ar"] .lang-btn { font-family: 'Manrope', sans-serif; }
+
+/* Page stays hidden (max 3.5s) until this stylesheet arrives, so slow connections never see unstyled HTML. */
+html.css-wait body { opacity: 1; }
