@@ -134,9 +134,14 @@ function applyCatalogUpdates(db) {
   apply20261101b(db);
   apply20261101d(db);
   // 2026-11-01 (c) — real WhatsApp number (only replaces the old placeholder, never an admin's own edit)
-  // 2026-11-01 (e) — phone and WhatsApp both +968 96907526 (replaces earlier numbers) (only replaces the earlier placeholder/previous values)
-  db.prepare("UPDATE settings SET value = '+968 96907526', updated_at = CURRENT_TIMESTAMP WHERE key = 'contact_whatsapp' AND value IN ('+968 91234567', '+968 96070785', '+968 96114412')").run();
-  db.prepare("UPDATE settings SET value = '+968 96907526', updated_at = CURRENT_TIMESTAMP WHERE key = 'contact_phone' AND value IN ('+968 24 998877', '+968 96114412')").run();
+  // 2026-11-11 — phone and WhatsApp both +968 96907526. Replaces any earlier number we set
+  // (whatever spacing it was saved with), never a different number an admin typed in.
+  const OLD = ['91234567', '96070785', '96114412', '24998877'];
+  const digits = "replace(replace(replace(replace(value, ' ', ''), '+', ''), '-', ''), '968', '')";
+  for (const key of ['contact_phone', 'contact_whatsapp']) {
+    db.prepare(`UPDATE settings SET value = '+968 96907526', updated_at = CURRENT_TIMESTAMP
+      WHERE key = ? AND ${digits} IN (${OLD.map(() => '?').join(',')})`).run(key, ...OLD);
+  }
 }
 
 const isDone = (db, key) => !!db.prepare('SELECT 1 FROM settings WHERE key = ?').get(key);
