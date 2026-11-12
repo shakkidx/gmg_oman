@@ -628,6 +628,7 @@
     if (r.added <= 0) { toast(t('You already have the maximum available ({n}) in your cart.', { n: r.max }), 'error'); return false; }
     await flyToCart(fromEl);
     updateCount(true);
+    try { if (window.fbq) fbq('track', 'AddToCart', { content_ids: [p.sku], content_name: p.name, content_type: 'product', value: (p.price_baisa * r.added) / 1000, currency: 'OMR' }); } catch (e) { /* ignore */ }
     if (r.added < qty) toast(t("Added {n} — that's the maximum available right now.", { n: r.added }));
     else toast(t('Added to cart'));
     if (openDrawer) window.GMG_openCart();

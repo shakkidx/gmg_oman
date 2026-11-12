@@ -76,7 +76,18 @@
         if (state === 'pending') await new Promise(r => setTimeout(r, 2000));
       }
     }
-    if (state === 'ok') Cart.clear();
+    if (state === 'ok') {
+      // Meta Pixel: report the purchase once per order
+      try {
+        const key = 'gmg_px_' + orderNo;
+        const items = Cart.items();
+        if (window.fbq && !sessionStorage.getItem(key) && items.length) {
+          fbq('track', 'Purchase', { content_ids: items.map(i => i.sku), content_type: 'product', num_items: items.reduce((n, i) => n + i.qty, 0), value: items.reduce((v, i) => v + i.price_baisa * i.qty, 0) / 1000, currency: 'OMR' }, { eventID: orderNo });
+          sessionStorage.setItem(key, '1');
+        }
+      } catch (e) { /* ignore */ }
+      Cart.clear();
+    }
 
     const head = {
       ok: `<div class="confirm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path class="check" d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>

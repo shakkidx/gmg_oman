@@ -4,6 +4,7 @@
   const start = async () => {
     const { $, $$, esc, omr, thumb, api, Cart, I, toast , t, RTL } = window.GMG;
     const params = new URLSearchParams(location.search);
+    try { const it = Cart.items(); if (window.fbq && it.length) fbq('track', 'InitiateCheckout', { content_ids: it.map(i => i.sku), content_type: 'product', num_items: Cart.count(), value: Cart.subtotal() / 1000, currency: 'OMR' }); } catch (e) { /* ignore */ }
 
     // Returning from a cancelled Thawani payment: release that attempt and keep the cart
     if (params.get('payment') === 'cancelled') {
