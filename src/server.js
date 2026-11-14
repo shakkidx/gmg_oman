@@ -52,6 +52,9 @@ const PUBLIC_DIR = path.resolve(__dirname, '../public');
   }
   app.use('/uploads', express.static(UPLOADS_DIR, { maxAge: '7d' }));
 }
+// Campaign pages live in their own folder (public/offers/…); make /offers open as /offers/ so relative images work.
+for (const p of ['/offers', '/offer', '/catalogue', '/national-day']) app.get(p, (req, res, next) => (req.path === '/offers/' ? next() : res.redirect(301, '/offers/')));
+
 let serveGz = () => false;
 // Gzip text files (CSS/JS/HTML/SVG) once and keep them in memory — mobile pages load several times faster.
 // Files requested with ?v=… are versioned, so browsers and the CDN may keep them for a year.
