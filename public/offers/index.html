@@ -36,11 +36,11 @@ body{margin:0;background:#E9EBF0;font-family:Montserrat,sans-serif}
 .wrap{display:flex;flex-direction:column;align-items:center;gap:40px;padding:40px 0}
 html,body{overflow-x:hidden;-webkit-text-size-adjust:100%;text-size-adjust:100%;touch-action:pan-y}
 .slot{position:relative;width:min(1080px,calc(100vw - 24px));aspect-ratio:1080/1350;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.12);background:#fff}
-.slot>.post{position:absolute;left:0;top:0;width:1080px;height:1350px;transform:scale(var(--s,1));transform-origin:0 0}
+.slot>.post{position:absolute;left:0;top:0;width:1080px;height:1350px;transform:scale(var(--s,tan(atan2(min(1080px,100vw - 24px),1080px))));transform-origin:0 0}
 @media print{body{background:#fff}.wrap{padding:0;gap:0}.slot{box-shadow:none;page-break-after:always;width:1080px}.slot>.post{transform:none}@page{size:1080px 1350px;margin:0}}
 .wrap{padding-bottom:120px}
 </style>
-<script>(function(){function f(){document.documentElement.style.setProperty("--s",Math.min(1080,window.innerWidth-24)/1080)}f();window.addEventListener("resize",f)})();</script>
+<script>(function(){function f(){var w=document.documentElement.clientWidth||window.innerWidth;document.documentElement.style.setProperty("--s",Math.min(1080,w-24)/1080)}f();window.addEventListener("resize",f);window.addEventListener("orientationchange",f)})();</script>
 </head>
 <body>
 <div class="wrap">
@@ -578,7 +578,7 @@ html,body{overflow-x:hidden;-webkit-text-size-adjust:100%;text-size-adjust:100%;
 </div>
 </section></div>
 </div>
-<link rel="stylesheet" href="offer-cart.css?v=3">
-<script src="offer-cart.js?v=3" defer></script>
+<link rel="stylesheet" href="offer-cart.css?v=4">
+<script src="offer-cart.js?v=4" defer></script>
 </body>
 </html>
