@@ -3,8 +3,8 @@
 .oc-bar{width:min(1080px,calc(100vw - 24px));box-sizing:border-box;margin-top:-40px;background:#fff;border-top:1px solid var(--line);box-shadow:0 10px 40px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;font-family:Montserrat,sans-serif}
 .oc-bar .oc-name{font-weight:800;font-size:clamp(14px,2.2vw,26px);color:var(--navy);line-height:1.2}
 .oc-bar .oc-price{font-weight:900;font-size:clamp(15px,2.4vw,28px);color:var(--red)}
-.oc-add{flex:none;border:0;border-radius:999px;background:var(--red);color:#fff;font:800 clamp(14px,2vw,22px) Montserrat,sans-serif;padding:12px 18px;cursor:pointer}
-.oc-add.in{background:var(--green)}
+.oc-add{flex:none;display:inline-flex;align-items:center;gap:8px;border:0;border-radius:999px;background:var(--red);color:#fff;font:800 clamp(14px,2vw,20px) Montserrat,sans-serif;padding:12px 18px;cursor:pointer;box-shadow:0 6px 16px rgba(200,16,46,.28)}
+
 .oc-fab{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:20;display:flex;gap:10px;font-family:Montserrat,sans-serif}
 .oc-fab button,.oc-fab a{border:0;border-radius:999px;font:800 15px Montserrat,sans-serif;padding:13px 20px;box-shadow:0 8px 24px rgba(0,0,0,.2);cursor:pointer;text-decoration:none;white-space:nowrap;display:flex;align-items:center;gap:8px}
 .oc-fab .cart{background:var(--navy);color:#fff}.oc-fab .cart b{background:var(--red);border-radius:999px;padding:2px 9px;font-size:13px}
@@ -40,3 +40,10 @@
 .oc-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:38px;min-width:38px;padding:0 12px;border-radius:12px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28);color:#fff;text-decoration:none;font-weight:700;font-size:13px;white-space:nowrap}
 .oc-btn:active{background:rgba(255,255,255,.25)}
 @media (max-width:400px){.oc-btn span{display:none}.oc-btn{padding:0;width:40px}.oc-mid b{font-size:13px}}
+.oc-ctl{flex:none}
+.oc-step{display:inline-flex;align-items:center;background:var(--green);color:#fff;border-radius:999px;box-shadow:0 6px 16px rgba(0,122,51,.28);overflow:hidden}
+.oc-step button{border:0;background:transparent;color:#fff;width:46px;height:46px;font:800 24px/1 Montserrat,sans-serif;cursor:pointer}
+.oc-step button:active{background:rgba(255,255,255,.18)}
+.oc-step span{display:inline-flex;align-items:center;gap:6px;min-width:44px;justify-content:center;font:800 18px Montserrat,sans-serif;padding:0 2px}
+.oc-toast{position:fixed;left:50%;bottom:86px;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#141A33;color:#fff;font:700 14px Montserrat,sans-serif;padding:12px 18px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.25);transition:.2s;z-index:60;white-space:nowrap}
+.oc-toast.show{opacity:1;transform:translate(-50%,0)}

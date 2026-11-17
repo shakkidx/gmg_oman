@@ -32,7 +32,7 @@
     var bar = document.createElement('div');
     bar.className = 'oc-bar';
     bar.innerHTML = '<div><div class="oc-name">' + esc(products[model].name) + '</div><div class="oc-price">' + omr(products[model].price) + '</div></div>' +
-      '<button class="oc-add" type="button" data-model="' + model + '">Add to cart</button>';
+      '<div class="oc-ctl" data-ctl="' + model + '"></div>';
     var slot = sec.closest('.slot') || sec;
     slot.parentNode.insertBefore(bar, slot.nextSibling);
   });
@@ -86,6 +86,11 @@
     '<button class="oc-send" type="submit">Send order on WhatsApp</button></form></div>';
   document.body.appendChild(sheet);
 
+  var CART_ICON = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h3l2.6 12.2a1.5 1.5 0 0 0 1.5 1.2h8.6a1.5 1.5 0 0 0 1.5-1.1L21 8H6.2"/></svg>';
+  var toastEl = document.createElement('div'); toastEl.className = 'oc-toast'; document.body.appendChild(toastEl);
+  var toastT;
+  function toast(msg) { toastEl.textContent = msg; toastEl.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(function () { toastEl.classList.remove('show'); }, 2200); }
+
   function count() { return Object.keys(cart).reduce(function (n, k) { return n + cart[k]; }, 0); }
   function total() { return Object.keys(cart).reduce(function (t, k) { return t + products[k].price * cart[k]; }, 0); }
 
@@ -95,12 +100,13 @@
     cartBtn.hidden = n === 0;
     cartBtn.querySelector('b').textContent = n;
     cartBtn.querySelector('span').textContent = n ? omr(total()) : '';
-    document.querySelectorAll('.oc-add').forEach(function (b) {
-      var q = cart[b.dataset.model] || 0;
-      b.classList.toggle('in', q > 0);
-      var ph = phase();
-      b.disabled = ph !== 'live';
-      b.textContent = ph === 'soon' ? 'Starts 20 Nov' : ph === 'ended' ? 'Offer ended' : (q ? 'In cart (' + q + ') +' : 'Add to cart');
+    var ph = phase();
+    document.querySelectorAll('[data-ctl]').forEach(function (box) {
+      var k = box.dataset.ctl, q = cart[k] || 0;
+      if (ph === 'ended') { box.innerHTML = '<button class="oc-add" type="button" disabled>Offer ended</button>'; return; }
+      box.innerHTML = q
+        ? '<div class="oc-step" role="group" aria-label="Quantity"><button type="button" data-dec="' + k + '" aria-label="Remove one">−</button><span>' + CART_ICON + q + '</span><button type="button" data-inc="' + k + '" aria-label="Add one">+</button></div>'
+        : '<button class="oc-add" type="button" data-model="' + k + '">' + CART_ICON + 'Add to cart</button>';
     });
     var list = sheet.querySelector('.oc-items');
     list.innerHTML = n ? Object.keys(cart).map(function (k) {
@@ -118,6 +124,7 @@
 
   document.addEventListener('click', function (e) {
     var add = e.target.closest('.oc-add');
+    if ((add || e.target.closest('[data-inc]')) && phase() === 'soon') { toast('Orders open on 20 November 🇴🇲'); return; }
     if (add && phase() !== 'live') { render(); return; }
     if (add) {
       var k = add.dataset.model;
