@@ -31,3 +31,8 @@
 .oc-empty{color:var(--muted);text-align:center;padding:20px 0}
 @media print{.oc-bar,.oc-fab,.oc-sheet{display:none!important}}
 .oc-fab .cart[hidden]{display:none}
+.oc-period{position:sticky;top:0;z-index:15;background:#1B2A6B;color:#fff;font-family:Montserrat,sans-serif;text-align:center;padding:10px 12px;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 12px;font-size:14px}
+.oc-period b{font-weight:800}.oc-period span{font-family:Cairo,sans-serif;font-weight:700;opacity:.9}
+.oc-period em{font-style:normal;background:#C8102E;border-radius:999px;padding:3px 10px;font-weight:700;font-size:12px}
+.oc-period.ended{background:#5A6072}
+.oc-add:disabled{background:#9AA0AE;cursor:not-allowed}

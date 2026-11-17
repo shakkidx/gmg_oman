@@ -37,6 +37,22 @@
     slot.parentNode.insertBefore(bar, slot.nextSibling);
   });
 
+  // ---------- Offer period: 20–30 November 2026, Oman time ----------
+  var START = Date.parse('2026-11-20T00:00:00+04:00'), END = Date.parse('2026-11-30T23:59:59+04:00');
+  var preview = /[?&]preview=1\b/.test(location.search);
+  function phase() { var t = Date.now(); if (preview) return 'live'; return t < START ? 'soon' : (t > END ? 'ended' : 'live'); }
+  var period = document.createElement('div');
+  period.className = 'oc-period';
+  document.body.insertBefore(period, document.body.firstChild);
+  function showPeriod() {
+    var ph = phase();
+    period.className = 'oc-period ' + ph;
+    period.innerHTML = ph === 'ended'
+      ? '<b>This offer has ended</b><span dir="rtl">انتهى العرض</span>'
+      : '<b>Offer valid 20 – 30 November 2026</b><span dir="rtl">العرض ساري من ٢٠ إلى ٣٠ نوفمبر ٢٠٢٦</span>' + (ph === 'soon' ? '<em>Orders open on 20 November</em>' : '');
+    return ph;
+  }
+
   var cart = load();
   Object.keys(cart).forEach(function (k) { if (!products[k] || !(cart[k] > 0)) delete cart[k]; });
 
@@ -71,6 +87,7 @@
   function total() { return Object.keys(cart).reduce(function (t, k) { return t + products[k].price * cart[k]; }, 0); }
 
   function render() {
+    if (showPeriod() === 'ended') { cart = {}; }
     var n = count();
     cartBtn.hidden = n === 0;
     cartBtn.querySelector('b').textContent = n;
@@ -78,7 +95,9 @@
     document.querySelectorAll('.oc-add').forEach(function (b) {
       var q = cart[b.dataset.model] || 0;
       b.classList.toggle('in', q > 0);
-      b.textContent = q ? 'In cart (' + q + ') +' : 'Add to cart';
+      var ph = phase();
+      b.disabled = ph !== 'live';
+      b.textContent = ph === 'soon' ? 'Starts 20 Nov' : ph === 'ended' ? 'Offer ended' : (q ? 'In cart (' + q + ') +' : 'Add to cart');
     });
     var list = sheet.querySelector('.oc-items');
     list.innerHTML = n ? Object.keys(cart).map(function (k) {
@@ -96,6 +115,7 @@
 
   document.addEventListener('click', function (e) {
     var add = e.target.closest('.oc-add');
+    if (add && phase() !== 'live') { render(); return; }
     if (add) {
       var k = add.dataset.model;
       cart[k] = Math.min(20, (cart[k] || 0) + 1);
@@ -117,6 +137,7 @@
     var err = sheet.querySelector('.oc-err');
     var v = function (id) { return document.getElementById(id).value.trim(); };
     var tel = v('ocTel').replace(/\D/g, '').replace(/^968/, '');
+    if (phase() !== 'live') { err.textContent = phase() === 'soon' ? 'Orders open on 20 November.' : 'This offer has ended.'; return; }
     if (!count()) { err.textContent = 'Your cart is empty.'; return; }
     if (v('ocName').length < 2) { err.textContent = 'Please enter your name.'; return; }
     if (!/^[279]\d{7}$/.test(tel)) { err.textContent = 'Please enter an 8-digit Omani mobile number.'; return; }
@@ -124,7 +145,7 @@
     if (!v('ocArea') || !v('ocAddr')) { err.textContent = 'Please enter your area and address.'; return; }
     err.textContent = '';
 
-    var lines = ['*New order — National Day offer (50% off)*', ''];
+    var lines = ['*New order — National Day offer (50% off, 20–30 Nov)*', ''];
     Object.keys(cart).forEach(function (k, i) {
       var p = products[k];
       lines.push((i + 1) + '. ' + p.name + ' (' + p.model + ') × ' + cart[k] + ' = ' + omr(p.price * cart[k]));
