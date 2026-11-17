@@ -33,19 +33,14 @@
     bar.className = 'oc-bar';
     bar.innerHTML = '<div><div class="oc-name">' + esc(products[model].name) + '</div><div class="oc-price">' + omr(products[model].price) + '</div></div>' +
       '<button class="oc-add" type="button" data-model="' + model + '">Add to cart</button>';
-    sec.parentNode.insertBefore(bar, sec.nextSibling);
+    var slot = sec.closest('.slot') || sec;
+    slot.parentNode.insertBefore(bar, slot.nextSibling);
   });
 
   var cart = load();
   Object.keys(cart).forEach(function (k) { if (!products[k] || !(cart[k] > 0)) delete cart[k]; });
 
-  // ---------- Fit pages to the phone width ----------
-  function fit() {
-    var z = Math.min(1, (window.innerWidth - 24) / 1080);
-    document.querySelectorAll('section.post, .oc-bar').forEach(function (el) { el.style.zoom = z; });
-    document.querySelectorAll('.oc-bar').forEach(function (el) { el.style.marginTop = (-40 / z) + 'px'; });
-  }
-  fit(); window.addEventListener('resize', fit);
+
 
   // ---------- Floating buttons + sheet ----------
   var fab = document.createElement('div');

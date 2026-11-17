@@ -1,9 +1,9 @@
 /* National Day offers — cart + WhatsApp checkout */
 :root{--red:#C8102E;--green:#007A33;--navy:#1B2A6B;--ink:#141A33;--muted:#5A6072;--line:#E1E3EA;--wa:#25D366}
-.oc-bar{width:1080px;box-sizing:border-box;margin-top:-40px;background:#fff;border-top:1px solid var(--line);box-shadow:0 10px 40px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:space-between;gap:24px;padding:28px 48px;font-family:Montserrat,sans-serif}
-.oc-bar .oc-name{font-weight:800;font-size:40px;color:var(--navy);line-height:1.15}
-.oc-bar .oc-price{font-weight:900;font-size:48px;color:var(--red)}
-.oc-add{flex:none;border:0;border-radius:999px;background:var(--red);color:#fff;font:900 46px Montserrat,sans-serif;padding:30px 60px;cursor:pointer}
+.oc-bar{width:min(1080px,calc(100vw - 24px));box-sizing:border-box;margin-top:-40px;background:#fff;border-top:1px solid var(--line);box-shadow:0 10px 40px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;font-family:Montserrat,sans-serif}
+.oc-bar .oc-name{font-weight:800;font-size:clamp(14px,2.2vw,26px);color:var(--navy);line-height:1.2}
+.oc-bar .oc-price{font-weight:900;font-size:clamp(15px,2.4vw,28px);color:var(--red)}
+.oc-add{flex:none;border:0;border-radius:999px;background:var(--red);color:#fff;font:800 clamp(14px,2vw,22px) Montserrat,sans-serif;padding:12px 18px;cursor:pointer}
 .oc-add.in{background:var(--green)}
 .oc-fab{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:20;display:flex;gap:10px;font-family:Montserrat,sans-serif}
 .oc-fab button,.oc-fab a{border:0;border-radius:999px;font:800 15px Montserrat,sans-serif;padding:13px 20px;box-shadow:0 8px 24px rgba(0,0,0,.2);cursor:pointer;text-decoration:none;white-space:nowrap;display:flex;align-items:center;gap:8px}
