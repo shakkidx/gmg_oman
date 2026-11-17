@@ -36,3 +36,7 @@
 .oc-period em{font-style:normal;background:#C8102E;border-radius:999px;padding:3px 10px;font-weight:700;font-size:12px}
 .oc-period.ended{background:#5A6072}
 .oc-add:disabled{background:#9AA0AE;cursor:not-allowed}
+.oc-period{position:sticky;padding:10px 92px}
+.oc-home,.oc-shop{position:absolute;top:50%;transform:translateY(-50%);color:#fff;text-decoration:none;font-weight:800;font-size:13px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:7px 12px;white-space:nowrap}
+.oc-home{left:10px}.oc-shop{right:10px}
+@media (max-width:520px){.oc-period{padding:8px 74px;font-size:12.5px}.oc-home,.oc-shop{font-size:12px;padding:6px 9px}}

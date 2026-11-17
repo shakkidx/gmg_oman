@@ -47,9 +47,9 @@
   function showPeriod() {
     var ph = phase();
     period.className = 'oc-period ' + ph;
-    period.innerHTML = ph === 'ended'
+    period.innerHTML = '<a class="oc-home" href="/" aria-label="Go to gmgoman.com home">← Home</a>' + (ph === 'ended'
       ? '<b>This offer has ended</b><span dir="rtl">انتهى العرض</span>'
-      : '<b>Offer valid 20 – 30 November 2026</b><span dir="rtl">العرض ساري من ٢٠ إلى ٣٠ نوفمبر ٢٠٢٦</span>' + (ph === 'soon' ? '<em>Orders open on 20 November</em>' : '');
+      : '<b>Offer valid 20 – 30 November 2026</b><span dir="rtl">العرض ساري من ٢٠ إلى ٣٠ نوفمبر ٢٠٢٦</span>' + (ph === 'soon' ? '<em>Orders open on 20 November</em>' : '')) + '<a class="oc-shop" href="/shop">Full shop</a>';
     return ph;
   }
 
