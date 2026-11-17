@@ -55,7 +55,7 @@
   sheet.innerHTML = '<div class="bg"></div><div class="panel" role="dialog" aria-modal="true" aria-label="Your order">' +
     '<h2>Your order <button class="x" type="button" aria-label="Close">×</button></h2>' +
     '<div class="oc-items"></div><div class="oc-sum"><span>Total</span><span class="oc-total"></span></div>' +
-    '<div class="oc-note">✓ Free delivery across Oman · VAT paid by us · Cash on delivery</div>' +
+    '<div class="oc-note">✓ Free delivery across Oman · VAT paid by us</div>' +
     '<form class="oc-form" novalidate>' +
     '<label for="ocName">Full name</label><input id="ocName" autocomplete="name" required>' +
     '<label for="ocTel">Mobile number</label><div class="tel"><span>+968</span><input id="ocTel" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="9XXXXXXX" maxlength="8" required></div>' +
@@ -129,7 +129,7 @@
       var p = products[k];
       lines.push((i + 1) + '. ' + p.name + ' (' + p.model + ') × ' + cart[k] + ' = ' + omr(p.price * cart[k]));
     });
-    lines.push('', '*Total: ' + omr(total()) + '*', 'Free delivery · VAT paid · Cash on delivery', '',
+    lines.push('', '*Total: ' + omr(total()) + '*', 'Free delivery · VAT paid by us', '',
       '*Name:* ' + v('ocName'), '*Mobile:* +968 ' + tel, '*Governorate:* ' + v('ocGov'), '*Area:* ' + v('ocArea'), '*Address:* ' + v('ocAddr'));
     if (v('ocNote')) lines.push('*Notes:* ' + v('ocNote'));
 
