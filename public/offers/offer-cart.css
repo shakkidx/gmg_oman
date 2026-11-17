@@ -31,12 +31,12 @@
 .oc-empty{color:var(--muted);text-align:center;padding:20px 0}
 @media print{.oc-bar,.oc-fab,.oc-sheet{display:none!important}}
 .oc-fab .cart[hidden]{display:none}
-.oc-period{position:relative;z-index:15;background:#1B2A6B;color:#fff;font-family:Montserrat,sans-serif;text-align:center;padding:10px 12px;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 12px;font-size:14px}
-.oc-period b{font-weight:800}.oc-period span{font-family:Cairo,sans-serif;font-weight:700;opacity:.9}
-.oc-period em{font-style:normal;background:#C8102E;border-radius:999px;padding:3px 10px;font-weight:700;font-size:12px}
-.oc-period.ended{background:#5A6072}
-.oc-add:disabled{background:#9AA0AE;cursor:not-allowed}
-.oc-period{padding:10px 92px}
-.oc-home,.oc-shop{position:absolute;top:50%;transform:translateY(-50%);color:#fff;text-decoration:none;font-weight:800;font-size:13px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:7px 12px;white-space:nowrap}
-.oc-home{left:10px}.oc-shop{right:10px}
-@media (max-width:520px){.oc-period{padding:8px 74px;font-size:12.5px}.oc-home,.oc-shop{font-size:12px;padding:6px 9px}}
+.oc-period{position:sticky;top:0;z-index:30;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;background:#1B2A6B;color:#fff;font-family:Montserrat,sans-serif;padding:8px 10px;padding-top:max(8px,env(safe-area-inset-top));box-shadow:0 4px 16px rgba(0,0,0,.18)}
+.oc-period.ended{background:#4A5063}
+.oc-mid{display:flex;flex-direction:column;align-items:center;text-align:center;line-height:1.25;min-width:0}
+.oc-mid b{font-weight:800;font-size:14px;white-space:nowrap}
+.oc-mid small{font-family:Cairo,sans-serif;font-weight:700;font-size:12.5px;opacity:.85}
+.oc-mid em{font-style:normal;margin-top:4px;background:#C8102E;border-radius:999px;padding:2px 10px;font-weight:700;font-size:11.5px;white-space:nowrap}
+.oc-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:38px;min-width:38px;padding:0 12px;border-radius:12px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28);color:#fff;text-decoration:none;font-weight:700;font-size:13px;white-space:nowrap}
+.oc-btn:active{background:rgba(255,255,255,.25)}
+@media (max-width:400px){.oc-btn span{display:none}.oc-btn{padding:0;width:40px}.oc-mid b{font-size:13px}}

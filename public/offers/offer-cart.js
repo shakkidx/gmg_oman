@@ -47,9 +47,12 @@
   function showPeriod() {
     var ph = phase();
     period.className = 'oc-period ' + ph;
-    period.innerHTML = '<a class="oc-home" href="/" aria-label="Go to gmgoman.com home">← Home</a>' + (ph === 'ended'
-      ? '<b>This offer has ended</b><span dir="rtl">انتهى العرض</span>'
-      : '<b>Offer valid 20 – 30 November 2026</b><span dir="rtl">العرض ساري من ٢٠ إلى ٣٠ نوفمبر ٢٠٢٦</span>' + (ph === 'soon' ? '<em>Orders open on 20 November</em>' : '')) + '<a class="oc-shop" href="/shop">Full shop</a>';
+    var home = '<a class="oc-btn" href="/" aria-label="gmgoman.com home"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg><span>Home</span></a>';
+    var shop = '<a class="oc-btn" href="/shop" aria-label="Full shop"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7h12l-1 13H7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg><span>Shop</span></a>';
+    var mid = ph === 'ended'
+      ? '<b>This offer has ended</b><small dir="rtl">انتهى العرض</small>'
+      : '<b>Offer valid 20–30 Nov 2026</b><small dir="rtl">العرض ساري من ٢٠ إلى ٣٠ نوفمبر</small>' + (ph === 'soon' ? '<em>Orders open on 20 November</em>' : '');
+    period.innerHTML = home + '<div class="oc-mid">' + mid + '</div>' + shop;
     return ph;
   }
 
