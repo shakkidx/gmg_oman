@@ -260,7 +260,7 @@
     // National Day offer (until 30 Nov 2026, 23:59 Oman time) — links to the /offers/ catalogue.
     const OFFER_ON = Date.now() <= Date.parse('2026-11-30T23:59:59+04:00');
     slot.outerHTML = `
-      ${OFFER_ON ? `<a class="promo-strip" href="/offers/">${RTL ? '🇴🇲 عروض العيد الوطني · اشترِ ٣ واحصل على ١ مجاناً<span class="ps-dates"> · من ٢٠ إلى ٣٠ نوفمبر</span> <b>شاهد العروض ←</b>' : '🇴🇲 National Day · Buy 3 get 1 FREE<span class="ps-dates"> · 20–30 Nov</span> <b>View offers →</b>'}</a>` : ''}
+      ${OFFER_ON ? `<a class="promo-strip" href="/offers/">${RTL ? '🇴🇲 عروض العيد الوطني · خصم ٥٠٪<span class="ps-dates"> · من ٢٠ إلى ٣٠ نوفمبر</span> <b>شاهد العروض ←</b>' : '🇴🇲 National Day · Flat 50% off<span class="ps-dates"> · 20–30 Nov</span> <b>View offers →</b>'}</a>` : ''}
       <div class="announce" id="announce">${RTL ? 'توصيل مجاني لجميع أنحاء عُمان للطلبات فوق <b>٢٥ ر.ع.</b>' : 'Free delivery across Oman on orders over <b>OMR 25</b>'}</div>
       <header class="site-header" id="siteHeader">
         <div class="wrap header-row">
@@ -270,7 +270,7 @@
           </div>
           <nav class="main-nav" aria-label="Main">${NAV().map(n => `<a href="${n.href}" class="${active(n.href)}">${n.label}</a>`).join('')}</nav>
           <div class="header-right">
-            ${OFFER_ON ? `<a class="offer-btn" href="/offers/">${RTL ? 'العروض' : 'OFFERS'}</a>` : ''}
+            ${OFFER_ON ? `<a class="offer-btn" href="/offers/">${RTL ? 'عروض ٥٠٪' : '50% OFF'}</a>` : ''}
             <button class="lang-btn" type="button" data-lang="${RTL ? 'en' : 'ar'}" aria-label="${RTL ? 'Switch to English' : 'التبديل إلى العربية'}">${RTL ? 'EN' : 'عربي'}</button>
             <button class="icon-btn" data-search aria-label="${t('Search')}">${I.search}</button>
             <button class="icon-btn" data-open="cartDrawer" aria-label="${t('Cart')}">${I.bag}<span class="cart-count" id="cartCount">0</span></button>
@@ -283,7 +283,7 @@
         <div class="drawer-body">
           <nav class="mobile-nav">
             <a href="/">${t('Home')}</a>
-            ${OFFER_ON ? `<a href="/offers/" class="offer-row">${RTL ? 'عروض العيد الوطني' : 'National Day offers'} <small>${RTL ? 'اشترِ ٣ واحصل على ١ مجاناً · ٢٠–٣٠ نوفمبر' : 'Buy 3 get 1 free · 20–30 Nov'}</small></a>` : ''}
+            ${OFFER_ON ? `<a href="/offers/" class="offer-row">${RTL ? 'عروض العيد الوطني' : 'National Day offers'} <small>${RTL ? 'خصم ٥٠٪ · ٢٠–٣٠ نوفمبر' : 'Flat 50% off · 20–30 Nov'}</small></a>` : ''}
             <a href="/shop">${t('Shop all')} <small>${t('All products')}</small></a>
             <div class="sub" id="mobileCats"></div>
             <a href="/track">${t('Track order')}</a>

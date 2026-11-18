@@ -6,17 +6,6 @@
   var GOVS = ['Muscat', 'Dhofar', 'Musandam', 'Al Buraimi', 'Ad Dakhiliyah', 'North Al Batinah', 'South Al Batinah', 'South Ash Sharqiyah', 'North Ash Sharqiyah', 'Ad Dhahirah', 'Al Wusta'];
 
   function px() { try { if (window.fbq) window.fbq.apply(null, arguments); } catch (e) { /* ignore */ } }
-  // Offer: buy 3 get 1 free on every product; buy 5 get 2 free on these. VAT 5% is added.
-  var TIER5 = { 'MV-CDA258': 1, 'MV-CDA259': 1, 'MV-CDA256': 1, 'MV-CDA255': 1, 'MV-CC65': 1, 'MV-X401CC': 1, 'MV-X402CC': 1 };
-  var VAT_RATE = 0.05;
-  function freeFor(k, q) { return TIER5[k] ? Math.floor(q / 5) * 2 + ((q % 5) >= 3 ? 1 : 0) : Math.floor(q / 3); }
-  function dealText(k) { return 'Buy 3 get 1 free' + (TIER5[k] ? ' · Buy 5 get 2 free' : ''); }
-  function nudge(k, q) {
-    var f = freeFor(k, q), f1 = freeFor(k, q + 1), f2 = freeFor(k, q + 2);
-    if (f1 > f) return 'Add 1 more and get ' + (f1 - f) + ' FREE 🎁';
-    if (f2 > f && q > 0) return 'Add 2 more and get ' + (f2 - f) + ' FREE 🎁';
-    return '';
-  }
   function omr(baisa) { return (baisa / 1000).toFixed(3) + ' OMR'; }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function load() { try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) { return {}; } }
@@ -42,7 +31,7 @@
     };
     var bar = document.createElement('div');
     bar.className = 'oc-bar';
-    bar.innerHTML = '<div><div class="oc-name">' + esc(products[model].name) + '</div><div class="oc-price">' + omr(products[model].price) + '</div><div class="oc-deal">🎁 ' + dealText(model) + '</div></div>' +
+    bar.innerHTML = '<div><div class="oc-name">' + esc(products[model].name) + '</div><div class="oc-price">' + omr(products[model].price) + '</div></div>' +
       '<div class="oc-ctl" data-ctl="' + model + '"></div>';
     var slot = sec.closest('.slot') || sec;
     slot.parentNode.insertBefore(bar, slot.nextSibling);
@@ -84,11 +73,8 @@
   sheet.className = 'oc-sheet';
   sheet.innerHTML = '<div class="bg"></div><div class="panel" role="dialog" aria-modal="true" aria-label="Your order">' +
     '<h2>Your order <button class="x" type="button" aria-label="Close">×</button></h2>' +
-    '<div class="oc-items"></div>' +
-    '<div class="oc-line"><span>Subtotal</span><span class="oc-sub"></span></div>' +
-    '<div class="oc-line"><span>VAT 5%</span><span class="oc-vat"></span></div>' +
-    '<div class="oc-sum"><span>Total</span><span class="oc-total"></span></div>' +
-    '<div class="oc-note">✓ Free delivery across Oman · Free pieces added automatically</div>' +
+    '<div class="oc-items"></div><div class="oc-sum"><span>Total</span><span class="oc-total"></span></div>' +
+    '<div class="oc-note">✓ Free delivery across Oman · VAT paid by us</div>' +
     '<form class="oc-form" novalidate>' +
     '<label for="ocName">Full name</label><input id="ocName" autocomplete="name" required>' +
     '<label for="ocTel">Mobile number</label><div class="tel"><span>+968</span><input id="ocTel" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="9XXXXXXX" maxlength="8" required></div>' +
@@ -106,9 +92,7 @@
   function toast(msg) { toastEl.textContent = msg; toastEl.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(function () { toastEl.classList.remove('show'); }, 2200); }
 
   function count() { return Object.keys(cart).reduce(function (n, k) { return n + cart[k]; }, 0); }
-  function subtotal() { return Object.keys(cart).reduce(function (t, k) { return t + products[k].price * cart[k]; }, 0); }
-  function vat() { return Math.round(subtotal() * VAT_RATE); }
-  function total() { return subtotal() + vat(); }
+  function total() { return Object.keys(cart).reduce(function (t, k) { return t + products[k].price * cart[k]; }, 0); }
 
   function render() {
     if (showPeriod() === 'ended') { cart = {}; }
@@ -128,11 +112,9 @@
     list.innerHTML = n ? Object.keys(cart).map(function (k) {
       var p = products[k];
       return '<div class="oc-item">' + (p.img ? '<img src="' + esc(p.img) + '" alt="">' : '') +
-        '<div class="t"><b>' + esc(p.name) + '</b><span>' + omr(p.price) + ' · ' + esc(p.model) + '</span>' + (freeFor(k, cart[k]) ? '<i>+' + freeFor(k, cart[k]) + ' FREE</i>' : '') + '</div>' +
+        '<div class="t"><b>' + esc(p.name) + '</b><span>' + omr(p.price) + ' · ' + esc(p.model) + '</span></div>' +
         '<div class="oc-qty"><button type="button" data-dec="' + k + '" aria-label="Less">−</button><span>' + cart[k] + '</span><button type="button" data-inc="' + k + '" aria-label="More">+</button></div></div>';
     }).join('') : '<div class="oc-empty">Your cart is empty.</div>';
-    sheet.querySelector('.oc-sub').textContent = omr(subtotal());
-    sheet.querySelector('.oc-vat').textContent = omr(vat());
     sheet.querySelector('.oc-total').textContent = omr(total());
     save();
   }
@@ -148,18 +130,11 @@
       var k = add.dataset.model;
       cart[k] = Math.min(20, (cart[k] || 0) + 1);
       render();
-      var nd = nudge(k, cart[k]); toast(nd || (freeFor(k, cart[k]) ? '🎁 ' + freeFor(k, cart[k]) + ' FREE piece added' : 'Added to cart'));
       px('track', 'AddToCart', { content_ids: [k], content_name: products[k].name, content_type: 'product', value: products[k].price / 1000, currency: 'OMR' });
       return;
     }
     var inc = e.target.closest('[data-inc]'), dec = e.target.closest('[data-dec]');
-    if (inc) {
-      var ki = inc.dataset.inc, before = freeFor(ki, cart[ki]);
-      cart[ki] = Math.min(20, cart[ki] + 1); render();
-      var after = freeFor(ki, cart[ki]);
-      if (after > before) toast('🎁 You get ' + after + ' FREE!'); else { var n2 = nudge(ki, cart[ki]); if (n2) toast(n2); }
-      return;
-    }
+    if (inc) { cart[inc.dataset.inc] = Math.min(20, cart[inc.dataset.inc] + 1); render(); return; }
     if (dec) { var d = dec.dataset.dec; cart[d] -= 1; if (cart[d] <= 0) delete cart[d]; render(); if (!count()) close(); return; }
   });
   cartBtn.addEventListener('click', open);
@@ -180,13 +155,12 @@
     if (!v('ocArea') || !v('ocAddr')) { err.textContent = 'Please enter your area and address.'; return; }
     err.textContent = '';
 
-    var lines = ['*New order — National Day offer (20–30 Nov)*', ''];
+    var lines = ['*New order — National Day offer (50% off, 20–30 Nov)*', ''];
     Object.keys(cart).forEach(function (k, i) {
       var p = products[k];
-      var fr = freeFor(k, cart[k]);
-      lines.push((i + 1) + '. ' + p.name + ' (' + p.model + ') × ' + cart[k] + ' = ' + omr(p.price * cart[k]) + (fr ? '  *+' + fr + ' FREE*' : ''));
+      lines.push((i + 1) + '. ' + p.name + ' (' + p.model + ') × ' + cart[k] + ' = ' + omr(p.price * cart[k]));
     });
-    lines.push('', 'Subtotal: ' + omr(subtotal()), 'VAT 5%: ' + omr(vat()), '*Total: ' + omr(total()) + '*', 'Free delivery across Oman', '',
+    lines.push('', '*Total: ' + omr(total()) + '*', 'Free delivery · VAT paid by us', '',
       '*Name:* ' + v('ocName'), '*Mobile:* +968 ' + tel, '*Governorate:* ' + v('ocGov'), '*Area:* ' + v('ocArea'), '*Address:* ' + v('ocAddr'));
     if (v('ocNote')) lines.push('*Notes:* ' + v('ocNote'));
 
