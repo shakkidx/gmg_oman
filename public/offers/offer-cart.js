@@ -155,7 +155,7 @@
     if (!v('ocArea') || !v('ocAddr')) { err.textContent = 'Please enter your area and address.'; return; }
     err.textContent = '';
 
-    var lines = ['*New order — National Day offer (50% off, 20–30 Nov)*', ''];
+    var lines = ['*New order — National Day offer (20–30 Nov)*', ''];
     Object.keys(cart).forEach(function (k, i) {
       var p = products[k];
       lines.push((i + 1) + '. ' + p.name + ' (' + p.model + ') × ' + cart[k] + ' = ' + omr(p.price * cart[k]));
