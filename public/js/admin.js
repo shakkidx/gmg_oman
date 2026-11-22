@@ -593,6 +593,16 @@
           <div class="toggle-row"><div><b>Thawani live mode</b><span>Off = sandbox (test cards, no real money)</span></div><label class="switch"><input type="checkbox" id="thLive" ${val('payment', 'thawani_mode') === 'live' ? 'checked' : ''}><i></i></label></div>
           <div class="fgrid" style="margin-top:10px"><div class="f"><label>Thawani publishable key</label><input data-s="thawani_public_key" class="mono" value="${esc(val('payment', 'thawani_public_key'))}"></div><div class="f"><label>Thawani secret key</label><input data-s="thawani_secret_key" class="mono" type="password" value="${esc(val('payment', 'thawani_secret_key'))}" autocomplete="new-password"><p class="hint">From your Thawani merchant portal. Leave as-is to keep the saved key.</p></div>
           <div class="f"><label>Release unpaid card orders after</label><select data-s="thawani_order_timeout_minutes">${['30', '45', '60', '120'].map(m => `<option value="${m}" ${val('payment', 'thawani_order_timeout_minutes') === m ? 'selected' : ''}>${m} minutes</option>`).join('')}</select></div></div>
+          <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line)">
+            <b>Thawani verification test</b>
+            <p class="hint" style="margin:4px 0 10px">Creates a sandbox (UAT) checkout session with success URL, cancel URL and customer metadata. Send the session ID and response below to Thawani. No order is created.</p>
+            <button class="btn btn-ghost" id="thTest" data-busy="Creating">Create test session</button>
+            <div id="thTestOut" hidden style="margin-top:12px">
+              <div class="f"><label>Session ID</label><input id="thSid" class="mono" readonly></div>
+              <div class="f" style="margin-top:8px"><label>Full Thawani response</label><textarea id="thJson" class="mono" rows="12" readonly style="font-size:12px"></textarea></div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn btn-ghost" id="thCopy" type="button">Copy response</button><a class="btn btn-ghost" id="thPay" target="_blank" rel="noopener">Open test payment page</a></div>
+            </div>
+          </div>
         </div>
         <div class="card card-pad"><div class="card-head"><h3>Change password</h3></div><div class="fgrid">
           <div class="f"><label for="pw0">Current password</label><input id="pw0" type="password" autocomplete="current-password"></div>
@@ -611,6 +621,16 @@
       await api('/api/admin/settings', { method: 'PUT', body: { settings: s } });
       toast('Settings saved');
     }).catch(err => toast(err.message, 'error'));
+    $('#thTest').onclick = e => busy(e.currentTarget, async () => {
+      const r = await api('/api/admin/settings/thawani-test', { method: 'POST', body: {} });
+      const d = r.data;
+      $('#thSid').value = d.response.data.session_id;
+      $('#thJson').value = JSON.stringify(d.response, null, 2);
+      $('#thPay').href = d.payUrl;
+      $('#thTestOut').hidden = false;
+      toast('Test session created');
+    }).catch(err => toast(err.message, 'error'));
+    $('#thCopy').onclick = () => { const t = $('#thJson'); t.select(); try { navigator.clipboard.writeText(t.value); } catch (x) { document.execCommand('copy'); } toast('Copied'); };
     $('#pwSave').onclick = e => busy(e.currentTarget, async () => {
       await api('/api/admin/auth/password', { method: 'POST', body: { currentPassword: $('#pw0').value, newPassword: $('#pw1').value } });
       localStorage.removeItem('gmg_admin_mustchange'); $('#pw0').value = $('#pw1').value = ''; toast('Password updated');

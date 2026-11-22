@@ -130,6 +130,9 @@ function apply20261101d(db) {
 }
 
 function applyCatalogUpdates(db) {
+  // 2026-11-22 — the original seed had made-up sandbox keys; replace them with Thawani's real UAT test keys.
+  db.prepare("UPDATE settings SET value = 'HGvTMLDssJghr9tlN9gr4DVYt0qyBy' WHERE key = 'thawani_public_key' AND value = 'hgViMusdnkgKc8ymxServiceKeyUAT'").run();
+  db.prepare("UPDATE settings SET value = 'rRQ26GcsZzoEhbrP2HZvLYDbn9C9et' WHERE key = 'thawani_secret_key' AND value = 'rRQ27ugXZTGvposProcessSecretKeyUAT'").run();
   apply20261101(db);
   apply20261101b(db);
   apply20261101d(db);

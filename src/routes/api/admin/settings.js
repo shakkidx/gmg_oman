@@ -90,4 +90,20 @@ router.put('/', requireAdmin, requireRole(['superadmin', 'admin']), (req, res) =
   }
 });
 
+/**
+ * POST /api/admin/settings/thawani-test
+ * Creates a Thawani sandbox (UAT) checkout session with customer metadata, success and cancel URLs,
+ * and returns Thawani's full response — the session ID Thawani asks for during verification.
+ */
+router.post('/thawani-test', requireAdmin, requireRole(['superadmin', 'admin']), async (req, res) => {
+  try {
+    const ThawaniService = require('../../../services/thawani/thawaniService');
+    const siteUrl = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
+    const result = await ThawaniService.createTestSession({ siteUrl });
+    res.json({ success: true, data: result });
+  } catch (e) {
+    res.status(502).json({ success: false, error: e.message, details: e.details || null });
+  }
+});
+
 module.exports = router;

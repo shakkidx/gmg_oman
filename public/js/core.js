@@ -72,7 +72,7 @@
     'Sold out — check back soon': 'نفدت الكمية — تابعنا قريباً', 'In stock · ready to ship': 'متوفر · جاهز للشحن', 'Buy now': 'اشترِ الآن', 'Decrease quantity': 'إنقاص الكمية', 'Increase quantity': 'زيادة الكمية',
     'Delivery across Oman': 'التوصيل لجميع أنحاء عُمان', 'Muscat 1–2 days · other governorates 2–5 days · free over {x}': 'مسقط ١–٢ يوم · باقي المحافظات ٢–٥ أيام · مجاناً فوق {x}',
     'Pay your way': 'ادفع بالطريقة التي تناسبك', 'Thawani Pay (Visa, Mastercard, debit) or cash on delivery': 'ثواني (فيزا، ماستركارد، بطاقة خصم) أو الدفع عند الاستلام', 'Genuine product · 14-day returns on defects': 'منتج أصلي · إرجاع خلال ١٤ يوماً للعيوب',
-    'Description': 'الوصف', 'Specifications': 'المواصفات', 'SKU': 'رمز المنتج', 'Delivery & returns': 'التوصيل والإرجاع', "That’s the most you can order right now.": 'هذه أقصى كمية يمكنك طلبها حالياً.',
+    'Description': 'الوصف', 'Specifications': 'المواصفات', 'Prices': 'الأسعار', 'Full price list': 'قائمة الأسعار الكاملة', 'Price list': 'قائمة الأسعار', 'SKU': 'رمز المنتج', 'Delivery & returns': 'التوصيل والإرجاع', "That’s the most you can order right now.": 'هذه أقصى كمية يمكنك طلبها حالياً.',
     'Orders placed before 2 pm are usually dispatched the same day from Muscat. You can return a defective item within 14 days in its original packaging.': 'الطلبات قبل الساعة ٢ ظهراً تُشحن عادةً في نفس اليوم من مسقط. يمكنك إرجاع المنتج المعيب خلال ١٤ يوماً في عبوته الأصلية.',
     'Read our policies': 'اقرأ سياساتنا', 'You may also like': 'قد يعجبك أيضاً', 'Pairs well with': 'يناسبه أيضاً', 'view {n}': 'صورة {n}', 'Show image {n}': 'عرض الصورة {n}',
     // cart page
@@ -249,7 +249,8 @@
     { href: '/category/power-banks', label: t('Power Banks') },
     { href: '/category/chargers', label: t('Chargers') },
     { href: '/category/cables', label: t('Cables') },
-    { href: '/category/car-chargers', label: t('Car Chargers') }
+    { href: '/category/car-chargers', label: t('Car Chargers') },
+    { href: '/prices', label: t('Prices') }
   ];
 
   function renderHeader() {
@@ -286,6 +287,7 @@
             ${OFFER_ON ? `<a href="/offers/" class="offer-row">${RTL ? 'عروض العيد الوطني' : 'National Day offers'} <small>${RTL ? 'خصم حتى ٤١٪ · ٢٠–٣٠ نوفمبر' : 'Up to 41% off · 20–30 Nov'}</small></a>` : ''}
             <a href="/shop">${t('Shop all')} <small>${t('All products')}</small></a>
             <div class="sub" id="mobileCats"></div>
+            <a href="/prices">${t('Prices')} <small>${t('Full price list')}</small></a>
             <a href="/track">${t('Track order')}</a>
             <a href="/contact">${t('Contact us')}</a>
             <a href="#" data-lang="${RTL ? 'en' : 'ar'}" class="lang-row">${RTL ? 'English' : 'العربية'} <small>${RTL ? 'Language' : 'اللغة'}</small></a>
@@ -494,7 +496,7 @@
             <p>${t('Genuine MEVRIO charging gear — GaN chargers, magnetic power banks and braided cables — delivered across the Sultanate of Oman.')}</p>
             <div class="foot-pay"><span>${RTL ? 'ثواني' : 'Thawani Pay'}</span><span>Visa</span><span>Mastercard</span><span>${t('Cash on delivery')}</span></div>
           </div>
-          <div><h4>${t('Shop')}</h4><ul id="footCats"><li><a href="/shop">${t('All products')}</a></li></ul></div>
+          <div><h4>${t('Shop')}</h4><ul id="footCats"><li><a href="/shop">${t('All products')}</a></li></ul><ul><li><a href="/prices">${t('Price list')}</a></li></ul></div>
           <div><h4>${t('Help')}</h4><ul>
             <li><a href="/track">${t('Track your order')}</a></li>
             <li><a href="/policies#delivery">${t('Delivery')}</a></li>

@@ -5,6 +5,9 @@ const { v4: uuidv4 } = require('uuid');
 const { getDatabase } = require('../../config/database');
 
 class ThawaniService {
+  static UAT_SECRET_KEY = 'rRQ26GcsZzoEhbrP2HZvLYDbn9C9et';
+  static UAT_PUBLIC_KEY = 'HGvTMLDssJghr9tlN9gr4DVYt0qyBy';
+
   /**
    * Retrieve Thawani configuration from settings
    */
@@ -19,8 +22,9 @@ class ThawaniService {
     return {
       active: map.thawani_active === 'true',
       mode: isLive ? 'live' : 'sandbox',
-      publicKey: map.thawani_public_key || '',
-      secretKey: map.thawani_secret_key || '',
+      // In sandbox, fall back to Thawani's published UAT test keys (from the Thawani integration document)
+      publicKey: map.thawani_public_key || (isLive ? '' : ThawaniService.UAT_PUBLIC_KEY),
+      secretKey: map.thawani_secret_key || (isLive ? '' : ThawaniService.UAT_SECRET_KEY),
       apiBaseUrl: isLive 
         ? 'https://checkout.thawani.om/api/v1' 
         : 'https://uatcheckout.thawani.om/api/v1',
@@ -67,6 +71,63 @@ class ThawaniService {
     }
 
     return json;
+  }
+
+  /**
+   * Customer metadata sent with every checkout session (Thawani requires it for verification).
+   * Values must be strings; empty fields are left out.
+   */
+  static customerMetadata(order) {
+    const m = {
+      'Customer name': order.customer_name,
+      'Customer phone': order.customer_phone,
+      'Customer email': order.customer_email,
+      'order id': order.order_number,
+      'Delivery governorate': order.delivery_governorate,
+      'Delivery area': order.delivery_area || order.delivery_city
+    };
+    Object.keys(m).forEach(k => { if (m[k] == null || m[k] === '') delete m[k]; else m[k] = String(m[k]).slice(0, 200); });
+    return m;
+  }
+
+  /**
+   * Create a sandbox (UAT) test session without creating an order — for Thawani's verification.
+   * Uses the saved sandbox keys, or Thawani's published UAT keys.
+   */
+  static async createTestSession({ siteUrl }) {
+    const db = getDatabase();
+    const map = {};
+    db.prepare("SELECT key, value FROM settings WHERE category = 'payment'").all().forEach(r => { map[r.key] = r.value; });
+    const live = (map.thawani_mode || 'sandbox') === 'live';
+    const secretKey = (!live && map.thawani_secret_key) || ThawaniService.UAT_SECRET_KEY;
+    const publicKey = (!live && map.thawani_public_key) || ThawaniService.UAT_PUBLIC_KEY;
+    const ref = 'GMG-TEST-' + Date.now().toString().slice(-6);
+    const clean = siteUrl.replace(/\/+$/, '');
+    const product = db.prepare(`SELECT name_en, COALESCE(sale_price_baisa, retail_price_baisa) AS price FROM products
+      WHERE is_published = 1 ORDER BY retail_price_baisa LIMIT 1`).get() || { name_en: 'MEVRIO charger', price: 4900 };
+    const payload = {
+      client_reference_id: ref,
+      mode: 'payment',
+      products: [{ name: product.name_en.substring(0, 100), unit_amount: product.price, quantity: 1 }],
+      success_url: `${clean}/order-confirmation.html?order=${ref}&paid=1`,
+      cancel_url: `${clean}/checkout.html?payment=cancelled&order=${ref}`,
+      metadata: ThawaniService.customerMetadata({
+        customer_name: 'Test Customer', customer_phone: '+968 96907526', customer_email: 'test@gmgoman.com',
+        order_number: ref, delivery_governorate: 'Muscat', delivery_area: 'Al Khuwair'
+      })
+    };
+    const res = await fetch('https://uatcheckout.thawani.om/api/v1/checkout/session', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'thawani-api-key': secretKey }, body: JSON.stringify(payload)
+    });
+    const json = await res.json().catch(() => ({}));
+    db.prepare(`INSERT INTO integration_events (id, service, event_type, reference_id, status, payload, response, error_message)
+      VALUES (?, 'thawani', 'test_session', ?, ?, ?, ?, ?)`)
+      .run(uuidv4(), ref, res.ok ? 'success' : 'failed', JSON.stringify(payload), JSON.stringify(json), res.ok ? null : (json.description || `HTTP ${res.status}`));
+    if (!res.ok || !json?.data?.session_id) {
+      const err = new Error(json.description || json.message || `Thawani returned HTTP ${res.status}`);
+      err.details = json; throw err;
+    }
+    return { request: payload, response: json, payUrl: `https://uatcheckout.thawani.om/pay/${json.data.session_id}?key=${encodeURIComponent(publicKey)}` };
   }
 
   /**
@@ -121,12 +182,7 @@ class ThawaniService {
       products: productsPayload,
       success_url: successUrl,
       cancel_url: cancelUrl,
-      metadata: {
-        order_number: order.order_number,
-        customer_name: order.customer_name,
-        customer_phone: order.customer_phone,
-        governorate: order.delivery_governorate
-      }
+      metadata: ThawaniService.customerMetadata(order)
     };
 
     let sessionResponse;

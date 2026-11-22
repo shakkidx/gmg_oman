@@ -115,6 +115,8 @@ app.use('/thumbs', (req, res) => {
 const page = file => (req, res) => {
   if (!serveGz(req, res, '/' + file)) res.sendFile(path.join(PUBLIC_DIR, file));
 };
+app.get('/prices', require('./routes/prices'));
+app.get('/price-list', (req, res) => res.redirect(301, '/prices'));
 app.get('/shop', page('shop.html'));
 app.get('/category/:slug', page('shop.html'));
 app.get('/product/:slug', page('product.html'));

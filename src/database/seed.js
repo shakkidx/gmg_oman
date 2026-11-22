@@ -76,8 +76,8 @@ function seed() {
       { key: 'cod_active', value: 'true', category: 'payment', description: 'Enable Cash on Delivery' },
       { key: 'thawani_active', value: 'true', category: 'payment', description: 'Enable Thawani Pay Gateway' },
       { key: 'thawani_mode', value: 'sandbox', category: 'payment', description: 'Thawani Mode: sandbox or live' },
-      { key: 'thawani_public_key', value: 'hgViMusdnkgKc8ymxServiceKeyUAT', category: 'payment', description: 'Thawani Sandbox Public Key' },
-      { key: 'thawani_secret_key', value: 'rRQ27ugXZTGvposProcessSecretKeyUAT', category: 'payment', description: 'Thawani Sandbox Secret Key' },
+      { key: 'thawani_public_key', value: 'HGvTMLDssJghr9tlN9gr4DVYt0qyBy', category: 'payment', description: 'Thawani Sandbox Public Key' },
+      { key: 'thawani_secret_key', value: 'rRQ26GcsZzoEhbrP2HZvLYDbn9C9et', category: 'payment', description: 'Thawani Sandbox Secret Key' },
 
       // Odoo 19 Community ERP Settings
       { key: 'odoo_mode', value: 'mock', category: 'odoo', description: 'Odoo Adapter Mode: mock or live' },
