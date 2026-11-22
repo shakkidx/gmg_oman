@@ -5,6 +5,15 @@ const { v4: uuidv4 } = require('uuid');
 const { getDatabase } = require('../../config/database');
 
 class ThawaniService {
+  // Thawani rejects a session ("Invalid information") when a product name is longer than 40 characters.
+  static productName(name) {
+    let n = String(name || 'Product').replace(/\s+/g, ' ').trim();
+    if (n.length > 40) n = n.replace(/^MEVRIO\s+/i, '');
+    if (n.length > 40) n = n.replace(/\s*\([^)]*\)\s*$/, '');
+    if (n.length > 40) { n = n.slice(0, 40); const sp = n.lastIndexOf(' '); if (sp > 24) n = n.slice(0, sp); }
+    if ((n.match(/\(/g) || []).length > (n.match(/\)/g) || []).length) n = n.slice(0, n.lastIndexOf('('));
+    return n.replace(/[\s,(·+-]+$/, '');
+  }
   static UAT_SECRET_KEY = 'rRQ26GcsZzoEhbrP2HZvLYDbn9C9et';
   static UAT_PUBLIC_KEY = 'HGvTMLDssJghr9tlN9gr4DVYt0qyBy';
 
@@ -108,7 +117,7 @@ class ThawaniService {
     const payload = {
       client_reference_id: ref,
       mode: 'payment',
-      products: [{ name: product.name_en.substring(0, 100), unit_amount: product.price, quantity: 1 }],
+      products: [{ name: ThawaniService.productName(product.name_en), unit_amount: product.price, quantity: 1 }],
       success_url: `${clean}/order-confirmation.html?order=${ref}&paid=1`,
       cancel_url: `${clean}/checkout.html?payment=cancelled&order=${ref}`,
       metadata: ThawaniService.customerMetadata({
@@ -147,7 +156,7 @@ class ThawaniService {
       const qty = Math.max(1, it.quantity || 1);
       const unitBaisa = it.unit_price_baisa;
       productsPayload.push({
-        name: (it.name_en || `Product #${idx + 1}`).substring(0, 100),
+        name: ThawaniService.productName(it.name_en || `Product #${idx + 1}`),
         unit_amount: unitBaisa, // In Baisa (integer)
         quantity: qty
       });
@@ -158,7 +167,7 @@ class ThawaniService {
     const differenceBaisa = order.total_baisa - lineItemsTotalBaisa;
     if (differenceBaisa > 0) {
       productsPayload.push({
-        name: `Delivery Fee & VAT (${order.delivery_governorate})`,
+        name: ThawaniService.productName(`Delivery & VAT (${order.delivery_governorate})`),
         unit_amount: differenceBaisa,
         quantity: 1
       });
@@ -166,7 +175,7 @@ class ThawaniService {
       // If discount made total less, consolidate to order level
       productsPayload.length = 0;
       productsPayload.push({
-        name: `Order #${order.order_number}`,
+        name: ThawaniService.productName(`Order #${order.order_number}`),
         unit_amount: order.total_baisa,
         quantity: 1
       });

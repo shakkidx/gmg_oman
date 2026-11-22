@@ -46,7 +46,7 @@
     const res = await fetch(path, { method: opts.method || 'GET', headers: { Authorization: `Bearer ${token()}`, ...(opts.body ? { 'Content-Type': 'application/json' } : {}) }, body: opts.body ? JSON.stringify(opts.body) : undefined });
     if (res.status === 401) { logout(); throw new Error('Session expired'); }
     let data = null; try { data = await res.json(); } catch (e) { /* not JSON */ }
-    if (!res.ok || (data && data.success === false)) throw new Error((data && (data.error || data.message)) || `Request failed (${res.status})`);
+    if (!res.ok || (data && data.success === false)) { const er = new Error((data && (data.error || data.message)) || `Request failed (${res.status})`); er.data = data; throw er; }
     return data;
   }
   function toast(msg, type) {
@@ -629,7 +629,12 @@
       $('#thPay').href = d.payUrl;
       $('#thTestOut').hidden = false;
       toast('Test session created');
-    }).catch(err => toast(err.message, 'error'));
+    }).catch(err => {
+      toast('Thawani: ' + err.message, 'error');
+      $('#thSid').value = '— not created —';
+      $('#thJson').value = JSON.stringify((err.data && err.data.details) || err.data || { error: err.message }, null, 2);
+      $('#thTestOut').hidden = false;
+    });
     $('#thCopy').onclick = () => { const t = $('#thJson'); t.select(); try { navigator.clipboard.writeText(t.value); } catch (x) { document.execCommand('copy'); } toast('Copied'); };
     $('#pwSave').onclick = e => busy(e.currentTarget, async () => {
       await api('/api/admin/auth/password', { method: 'POST', body: { currentPassword: $('#pw0').value, newPassword: $('#pw1').value } });
