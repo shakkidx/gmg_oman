@@ -234,6 +234,29 @@ router.put('/:id/status', requireAdmin, (req, res) => {
  * POST /api/admin/orders/:id/sync-odoo
  * Manually trigger Odoo sales order sync for this order
  */
+router.delete('/:id', requireAdmin, (req, res) => {
+  // Removes a test / unwanted order for good. Only orders that were never sent to Odoo and
+  // never paid can be deleted, so real sales and accounting records stay intact.
+  try {
+    const db = getDatabase();
+    const o = db.prepare('SELECT * FROM orders WHERE id = ? OR order_number = ?').get(req.params.id, req.params.id);
+    if (!o) return res.status(404).json({ success: false, error: 'Order not found.' });
+    if (o.odoo_sale_order_id || o.odoo_sale_order_name) return res.status(400).json({ success: false, error: `This order is in Odoo (${o.odoo_sale_order_name || o.odoo_sale_order_id}). Cancel it instead.` });
+    if (o.payment_status === 'paid') return res.status(400).json({ success: false, error: 'This order was paid. Cancel or refund it instead of deleting.' });
+    if (!['cancelled', 'refunded'].includes(o.fulfillment_status)) restockOrder(o.id, `order ${o.order_number} deleted`, req.adminUser.username);
+    runTransaction(() => {
+      db.prepare('DELETE FROM order_events WHERE order_id = ?').run(o.id);
+      db.prepare('DELETE FROM order_items WHERE order_id = ?').run(o.id);
+      db.prepare('DELETE FROM orders WHERE id = ?').run(o.id);
+      db.prepare("UPDATE abandoned_checkouts SET status = 'open', order_number = NULL WHERE order_number = ?").run(o.order_number);
+    });
+    AuditService.log({ adminUserId: req.adminUser.id, action: 'ORDER_DELETE', entityType: 'order', entityId: o.id, details: { order_number: o.order_number, total_baisa: o.total_baisa, customer: o.customer_name }, req });
+    res.json({ success: true, deleted: o.order_number });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 router.post('/:id/sync-odoo', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
