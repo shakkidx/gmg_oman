@@ -764,3 +764,10 @@ html.css-wait body { opacity: 1; }
 .lead-msg { margin: 0; font-size: 14px; min-height: 0; }
 .lead-msg.ok { background: rgba(37,211,102,.18); border-radius: 12px; padding: 12px 14px; font-weight: 600; }
 .lead-msg.err { color: #ffb4b4; }
+.co-qty { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-weight: 500; }
+.co-qty button:not(.co-remove) { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line); background: #fff; font-size: 15px; line-height: 1; display: grid; place-items: center; cursor: pointer; color: var(--ink); }
+.co-qty button:disabled { opacity: .4; cursor: default; }
+.co-qty em { font-style: normal; min-width: 14px; text-align: center; font-size: 13px; }
+.co-remove { background: none; border: 0; color: var(--muted); text-decoration: underline; font-size: 12.5px; cursor: pointer; margin-inline-start: 6px; padding: 4px; }
+.co-item b { display: block; overflow: visible; -webkit-line-clamp: unset; text-align: start; }
+.co-item .co-name { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }

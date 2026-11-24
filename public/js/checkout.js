@@ -94,7 +94,8 @@
         lastTotal = r.totalBaisa;
         $('#coItems').innerHTML = r.lines.map(l => {
           const it = items.find(i => i.sku === l.sku) || {};
-          return `<div class="co-item"><span class="thumb"><img src="${thumb(it.image, 480)}" alt=""><i>${l.quantity}</i></span><b>${esc(l.name)}${l.offer ? `<small class="offer-tag">${esc(l.offer)}</small>` : ''}</b><span>${omr(l.line_total_baisa)}${l.original_price_baisa > l.unit_price_baisa ? `<s>${omr(l.original_price_baisa * l.quantity)}</s>` : ''}</span></div>`;
+          return `<div class="co-item" data-sku="${esc(l.sku)}"><span class="thumb"><img src="${thumb(it.image, 480)}" alt=""><i>${l.quantity}</i></span><b><span class="co-name">${esc(l.name)}</span>${l.offer ? `<small class="offer-tag">${esc(l.offer)}</small>` : ''}
+            <span class="co-qty"><button type="button" data-co-dec aria-label="${t('Decrease')}">−</button><em>${l.quantity}</em><button type="button" data-co-inc aria-label="${t('Increase')}" ${l.quantity >= l.max_qty ? 'disabled' : ''}>+</button><button type="button" class="co-remove" data-co-remove>${t('Remove')}</button></span></b><span>${omr(l.line_total_baisa)}${l.original_price_baisa > l.unit_price_baisa ? `<s>${omr(l.original_price_baisa * l.quantity)}</s>` : ''}</span></div>`;
         }).join('');
         const saved = r.lines.reduce((s, l) => s + Math.max(0, l.original_price_baisa - l.unit_price_baisa) * l.quantity, 0);
         const govChosen = Boolean($('#fGov').value);
@@ -136,7 +137,15 @@
     const notes = await Cart.sync();
     if (notes.length) $('#coAlerts').insertAdjacentHTML('beforeend', `<div class="alert warn">${notes.map(esc).join('<br>')}</div>`);
     if (!Cart.items().length) { location.href = '/cart'; return; }
-    Cart.on(() => recalc());
+    Cart.on(() => { if (!Cart.items().length) { location.href = '/cart'; return; } recalc(); });
+    // − / + / Remove inside the order summary
+    $('#coItems').addEventListener('click', e => {
+      const row = e.target.closest('.co-item'); if (!row) return;
+      const it = Cart.items().find(i => i.sku === row.dataset.sku); if (!it) return;
+      if (e.target.closest('[data-co-remove]')) Cart.remove(it.sku);
+      else if (e.target.closest('[data-co-dec]')) Cart.setQty(it.sku, it.qty - 1);
+      else if (e.target.closest('[data-co-inc]')) Cart.setQty(it.sku, it.qty + 1);
+    });
     recalc();
 
     // ---------- Validation ----------
