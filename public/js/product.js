@@ -39,7 +39,8 @@
         <a class="card-cat" href="/category/${esc(p.category.slug)}">${esc(p.brand)} · ${esc(p.category.name)}</a>
         <h1>${esc(p.name)}</h1>
         <div class="pdp-price"><b>${omr(p.pricing.current_baisa)}</b>${sale ? `<s>${omr(p.pricing.retail_baisa)}</s><span class="save-tag">${t('Save {x}', { x: omr(saveBaisa) })}</span>` : ''}</div>
-        <p class="tax-note" id="taxNote">${t('Delivery calculated at checkout.')}</p>
+        ${p.pricing.offer ? `<p class="pdp-offer"><span class="offer-tag">${esc(p.pricing.offer.name)}</span> <span data-offer-left="${esc(p.pricing.offer.ends_at)}">${window.GMG.offerLeft(p.pricing.offer.ends_at)}</span></p>` : ''}
+        <p class="tax-note" id="taxNote">${p.pricing.vat_included ? t('VAT included') + ' · ' : ''}${t('Free delivery all over Oman')}</p>
         ${p.short_desc ? `<p class="pdp-lead">${esc(p.short_desc)}</p>` : ''}
         <div class="stock-line ${soldOut ? 'out' : ''}"><i></i>${soldOut ? t('Sold out — check back soon') : t('In stock · ready to ship')}</div>
         <div class="buy-row">
@@ -53,7 +54,7 @@
         <p class="qty-hint" id="qHint" aria-live="polite"></p>
         ${soldOut ? '' : `<button class="btn btn-blue btn-block pdp-buynow" type="button" id="buyNow">${t('Buy now')}</button>`}
         <div class="perks">
-          <div class="perk">${I.truck}<div><b>${t('Delivery across Oman')}</b><span>${t('Muscat 1–2 days · other governorates 2–5 days · free over {x}', { x: '<span data-free>OMR 25</span>' })}</span></div></div>
+          <div class="perk">${I.truck}<div><b>${t('Delivery across Oman')}</b><span>${t('Free delivery all over Oman')} · ${t('Muscat 1–2 days · other governorates 2–5 days')}</span></div></div>
           <div class="perk">${I.lock}<div><b>${t('Pay your way')}</b><span>${t('Thawani Pay (Visa, Mastercard, debit) or cash on delivery')}</span></div></div>
           <div class="perk">${I.shield}<div><b>${t('1-year warranty')}</b><span>${t('Genuine product · 14-day returns on defects')}</span></div></div>
         </div>
@@ -64,8 +65,8 @@
         </div>
       </div>`;
 
-    window.GMG.storeReady.then(s => { if (s.free_shipping_threshold_formatted) $$('[data-free]').forEach(el => el.textContent = s.free_shipping_threshold_formatted.replace('.000', '')); });
-    api('/api/checkout/config').then(r => { if (!r.data.vat_inclusive) $('#taxNote').textContent = t('+ {p}% VAT and delivery calculated at checkout.', { p: r.data.vat_percentage }); else $('#taxNote').textContent = t('Price includes VAT. Delivery calculated at checkout.'); }).catch(() => {});
+    if (!p.pricing.vat_included) api('/api/checkout/config').then(r => { if (!r.data.vat_inclusive) $('#taxNote').textContent = t('+ {p}% VAT', { p: r.data.vat_percentage }) + ' · ' + t('Free delivery all over Oman'); }).catch(() => {});
+    window.GMG.track('ViewContent', { content_ids: [p.sku], content_name: p.name, content_type: 'product', contents: [{ id: p.sku, quantity: 1 }], value: p.pricing.current_baisa / 1000, currency: 'OMR' });
 
     // ---------- Gallery ----------
     const track = $('#track'); let gi = 0;

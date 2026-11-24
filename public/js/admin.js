@@ -78,14 +78,16 @@
     { r: '', label: 'Dashboard', icon: I.home },
     { r: 'orders', label: 'Orders', icon: I.orders },
     { r: 'products', label: 'Products', icon: I.box },
+    { r: 'offers', label: 'Offers', icon: I.star },
+    { r: 'abandoned', label: 'Abandoned carts', icon: I.wa },
     { r: 'categories', label: 'Categories', icon: I.tag },
     { r: 'odoo', label: 'Odoo sync', icon: I.sync },
     { r: 'settings', label: 'Settings', icon: I.gear }
   ];
-  const TAB = [NAV[0], NAV[1], NAV[2], NAV[4], { r: 'more', label: 'More', icon: I.more }];
+  const TAB = [NAV[0], NAV[1], NAV[2], NAV[4], { r: 'more', label: 'More', icon: I.more }]; // Dashboard, Orders, Products, Abandoned, More
   let toShip = 0;
   function renderNav(route) {
-    const isOn = r => (r === route || (r === 'more' && ['categories', 'settings', 'more'].includes(route)));
+    const isOn = r => (r === route || (r === 'more' && ['offers', 'categories', 'odoo', 'settings', 'more'].includes(route)));
     $('#sideNav').innerHTML = NAV.map(n => `<a href="#/${n.r}" class="${isOn(n.r) ? 'active' : ''}">${n.icon}<span>${n.label}</span>${n.r === 'orders' && toShip ? `<span class="count">${toShip}</span>` : ''}</a>`).join('');
     $('#tabbar').innerHTML = TAB.map(n => `<a href="#/${n.r}" class="${isOn(n.r) ? 'active' : ''}">${n.icon}<span>${n.label}</span>${n.r === 'orders' && toShip ? `<span class="dot">${toShip}</span>` : ''}</a>`).join('');
   }
@@ -241,7 +243,7 @@
       </div>
       <div class="card card-pad section">
         <h3 style="margin-bottom:6px">Items</h3>
-        <div class="list">${o.items.map(it => `<div class="row"><span class="thumb"><img src="${thumb(it.image_url)}" alt=""></span><div class="grow"><div class="title">${esc(it.name_en)}</div><div class="meta"><span class="mono">${esc(it.sku)}</span> · ${it.quantity} × ${it.unit_price_formatted}</div></div><div class="end"><b>${it.line_total_formatted}</b></div></div>`).join('')}</div>
+        <div class="list">${o.items.map(it => `<div class="row"><span class="thumb"><img src="${thumb(it.image_url)}" alt=""></span><div class="grow"><div class="title">${esc(it.name_en)}</div><div class="meta"><span class="mono">${esc(it.sku)}</span> · ${it.quantity} × ${it.unit_price_formatted}${it.original_price_baisa > it.unit_price_baisa ? ` <s>${omr(it.original_price_baisa)}</s>` : ''}</div>${it.offer_name ? `<div class="meta"><span class="pill warn">${esc(it.offer_name)}</span></div>` : ''}</div><div class="end"><b>${it.line_total_formatted}</b></div></div>`).join('')}</div>
         <div style="margin-top:10px">
           <div class="sum"><span>Subtotal</span><b>${o.subtotal_formatted}</b></div>
           ${o.discount_baisa ? `<div class="sum"><span>Discount</span><b>−${o.discount_formatted}</b></div>` : ''}
@@ -642,9 +644,92 @@
     }).catch(err => toast(err.message, 'error'));
   }
 
+  // =====================================================================
+  // OFFERS — name, dates (Oman time), products and offer prices
+  // =====================================================================
+  const toLocalInput = iso => { const d = new Date(Date.parse(iso) + 4 * 3600e3); return isNaN(d) ? '' : d.toISOString().slice(0, 16); }; // shown in Oman time
+  const omanText = iso => new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Muscat' });
+  async function viewOffers(v) {
+    v.innerHTML = `<div class="view-head"><div><h2>Offers</h2><p>Offer prices include VAT and apply automatically between the start and end time (Oman time). Only products listed in the running offer appear on <a href="/offers/" target="_blank" style="text-decoration:underline">/offers</a>.</p></div><button class="btn btn-blue" id="addOffer">${I.plus} New offer</button></div><div id="offerList"></div>`;
+    let offers = [];
+    const ST = { live: ['Live now', 'ok'], scheduled: ['Scheduled', 'blue'], ended: ['Ended', ''], off: ['Switched off', 'bad'] };
+    const load = async () => {
+      offers = (await api('/api/admin/offers')).data;
+      $('#offerList').innerHTML = offers.length ? offers.map(o => `<div class="card card-pad" style="margin-bottom:14px;cursor:pointer" data-offer="${esc(o.id)}">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><b style="font-size:16px">${esc(o.name_en)}</b><div class="meta" style="color:var(--muted);font-size:13px;margin-top:4px">${omanText(o.starts_at)} → ${omanText(o.ends_at)} (Oman)</div></div>${pill(ST, o.status)}</div>
+        <div class="meta" style="color:var(--muted);font-size:13px;margin:8px 0">${o.items.length} products · sold ${o.sold.qty} pcs · ${omr(o.sold.revenue)}</div>
+        <div class="list">${o.items.map(i => `<div class="row"><span class="thumb"><img src="${thumb(i.image_url)}" alt=""></span><div class="grow"><div class="title">${esc(i.name_en)}</div><div class="meta mono">${esc(i.sku)} · stock ${i.stock_quantity}</div></div><div class="end"><b>${omr(i.offer_price_baisa)}</b><br><s style="color:var(--muted);font-size:12px">${omr(i.normal_price_baisa)}</s></div></div>`).join('')}</div>
+      </div>`).join('') : '<div class="empty"><h3>No offers yet</h3></div>';
+    };
+    const edit = async o => {
+      const products = (await api('/api/admin/products?limit=200')).data;
+      o = o || { name_en: '', name_ar: '', starts_at: '', ends_at: '', is_active: 1, items: [] };
+      const priceOf = id => { const i = o.items.find(x => x.product_id === id); return i ? (i.offer_price_baisa / 1000).toFixed(3) : ''; };
+      openSheet(o.id ? 'Edit offer' : 'New offer', `<div class="card card-pad"><div class="fgrid" style="grid-template-columns:minmax(0,1fr)">
+        <div class="f"><label for="oName">Offer name (English)</label><input id="oName" value="${esc(o.name_en)}" placeholder="National Day Offer 2026"></div>
+        <div class="f"><label for="oNameAr">Offer name (Arabic)</label><input id="oNameAr" dir="rtl" value="${esc(o.name_ar || '')}"></div>
+        <div style="display:grid;grid-template-columns:1fr;gap:10px">
+          <div class="f"><label for="oStart">Starts (Oman time)</label><input id="oStart" style="min-width:0;width:100%" type="datetime-local" value="${o.starts_at ? toLocalInput(o.starts_at) : ''}"></div>
+          <div class="f"><label for="oEnd">Ends (Oman time)</label><input id="oEnd" style="min-width:0;width:100%" type="datetime-local" value="${o.ends_at ? toLocalInput(o.ends_at) : ''}"></div>
+        </div>
+        <div class="toggle-row"><div><b>Active</b><p class="hint">Switch off to stop the offer at once.</p></div><label class="switch"><input type="checkbox" id="oAct" ${o.is_active ? 'checked' : ''}><i></i></label></div>
+        <div class="f"><label>Products and offer prices (OMR, VAT included)</label><p class="hint">Leave the price empty to keep a product out of the offer.</p>
+          <div class="list">${products.map(p => `<div class="row" style="flex-wrap:wrap"><span class="thumb"><img src="${thumb(p.primary_image)}" alt=""></span><div class="grow"><div class="title">${esc(p.name_en)}</div><div class="meta">${esc(p.sku)} · normal ${omr(p.sale_price_baisa && p.sale_price_baisa < p.retail_price_baisa ? p.sale_price_baisa : p.retail_price_baisa)}</div></div><div class="end" style="margin-inline-start:auto"><div class="money" style="width:120px"><span>OMR</span><input data-op="${esc(p.id)}" inputmode="decimal" value="${priceOf(p.id)}" placeholder="—"></div></div></div>`).join('')}</div></div>
+      </div></div>`, `<span class="spacer"></span><button class="btn btn-ghost" data-close-sheet>Cancel</button><button class="btn btn-primary" id="oSave" data-busy="Saving">Save offer</button>`);
+      $('#oSave').onclick = e => busy(e.currentTarget, async () => {
+        const items = $$('[data-op]').filter(i => i.value.trim()).map(i => ({ productId: i.dataset.op, priceBaisa: Math.round(parseFloat(i.value) * 1000) }));
+        if (items.some(i => !(i.priceBaisa > 0))) throw new Error('Check the offer prices.');
+        const body = { nameEn: $('#oName').value.trim(), nameAr: $('#oNameAr').value.trim(), startsAt: $('#oStart').value, endsAt: $('#oEnd').value, isActive: $('#oAct').checked, items };
+        if (o.id) await api(`/api/admin/offers/${o.id}`, { method: 'PUT', body }); else await api('/api/admin/offers', { method: 'POST', body });
+        toast('Offer saved'); closeSheet(); load();
+      }).catch(err => toast(err.message, 'error'));
+    };
+    $('#addOffer').onclick = () => edit(null);
+    $('#offerList').onclick = e => { const r = e.target.closest('[data-offer]'); if (r) edit(offers.find(o => o.id === r.dataset.offer)); };
+    load();
+  }
+
+  // =====================================================================
+  // ABANDONED CHECKOUTS — phone typed at checkout, order not finished
+  // =====================================================================
+  async function viewAbandoned(v) {
+    let tab = 'open';
+    v.innerHTML = `<div class="view-head"><div><h2>Abandoned carts</h2><p>Saved as soon as a customer types a valid phone number at checkout. Tap WhatsApp to follow up.</p></div></div>
+      <div class="tabs" id="abTabs" style="display:flex;gap:8px;margin-bottom:12px"></div><div class="card card-pad"><div class="list" id="abList"></div></div>`;
+    const waLink = r => {
+      const num = String(r.customer_phone || '').replace(/\D/g, '');
+      const ar = r.lang === 'ar';
+      const lines = r.items.map(i => `• ${i.name} × ${i.quantity}`).join('\n');
+      const msg = ar ? `مرحباً ${r.customer_name || ''}، معك GMG Oman. لاحظنا أن طلبك لم يكتمل:\n${lines}\nالإجمالي: ${omr(r.total_baisa)} — التوصيل مجاني. هل نؤكد الطلب لك؟`
+        : `Hello ${r.customer_name || ''}, this is GMG Oman. We noticed your order was not completed:\n${lines}\nTotal: ${omr(r.total_baisa)} — free delivery. Shall we confirm it for you?`;
+      return `https://wa.me/${num}?text=${encodeURIComponent(msg)}`;
+    };
+    const load = async () => {
+      const r = await api('/api/admin/abandoned' + (tab === 'all' ? '' : `?status=${tab}`));
+      const c = r.counts || {};
+      $('#abTabs').innerHTML = [['open', 'Open'], ['contacted', 'Contacted'], ['converted', 'Ordered'], ['all', 'All']].map(([k, l]) => `<button class="btn ${tab === k ? 'btn-primary' : 'btn-ghost'}" data-tab="${k}" style="padding:8px 12px;${tab === k ? 'background:var(--ink);color:#fff' : ''}">${l}${k !== 'all' && c[k] ? ` (${c[k]})` : ''}</button>`).join('');
+      $('#abList').innerHTML = r.data.length ? r.data.map(a => `<div class="row" style="align-items:flex-start">
+        <div class="grow"><div class="title">${esc(a.customer_name || 'No name')} · <a href="tel:${esc(a.customer_phone)}" class="mono">${esc(a.customer_phone)}</a></div>
+          <div class="meta">${a.items.map(i => `${esc(i.name)} × ${i.quantity}${i.offer ? ' (offer)' : ''}`).join('<br>')}</div>
+          <div class="meta">${omr(a.total_baisa)} · ${esc(a.governorate || '—')} · ${ago(a.updated_at)}${a.order_number ? ` · order <b>${esc(a.order_number)}</b>` : ''}</div></div>
+        <div class="end" style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+          ${a.status !== 'converted' ? `<a class="btn" style="background:#25d366;color:#fff;padding:8px 12px" href="${waLink(a)}" target="_blank" rel="noopener" data-wa-ab="${esc(a.id)}">${I.wa.replace('<svg', '<svg width="16" height="16"')} WhatsApp</a>` : '<span class="pill ok">Ordered</span>'}
+          ${a.status === 'contacted' ? `<button class="btn btn-ghost" style="padding:6px 10px;font-size:12px" data-reopen="${esc(a.id)}">Mark open</button>` : ''}
+        </div></div>`).join('') : '<p style="color:var(--muted);font-size:14px">Nothing here.</p>';
+    };
+    v.addEventListener('click', async e => {
+      const t = e.target.closest('[data-tab]'); if (t) { tab = t.dataset.tab; load(); return; }
+      const w = e.target.closest('[data-wa-ab]'); if (w) { api(`/api/admin/abandoned/${w.dataset.waAb}`, { method: 'PATCH', body: { status: 'contacted' } }).then(load).catch(() => {}); return; }
+      const ro = e.target.closest('[data-reopen]'); if (ro) { await api(`/api/admin/abandoned/${ro.dataset.reopen}`, { method: 'PATCH', body: { status: 'open' } }); load(); }
+    });
+    load();
+  }
+
   // Mobile "More" page
   function viewMore(v) {
     v.innerHTML = `<div class="view-head"><h2>More</h2></div><div class="card card-pad"><div class="list">
+      <a class="row" href="#/offers">${I.star}<div class="grow"><div class="title">Offers</div><div class="meta">Offer dates, products and offer prices</div></div></a>
+      <a class="row" href="#/odoo">${I.sync}<div class="grow"><div class="title">Odoo sync</div></div></a>
       <a class="row" href="#/categories">${I.tag}<div class="grow"><div class="title">Categories</div></div></a>
       <a class="row" href="#/settings">${I.gear}<div class="grow"><div class="title">Settings</div><div class="meta">Store details, delivery, payments, password</div></div></a>
       <a class="row" href="/" target="_blank" rel="noopener">${I.home}<div class="grow"><div class="title">View website</div></div></a>
@@ -654,7 +739,7 @@
   }
 
   // ---------- Router ----------
-  const VIEWS = { '': ['Dashboard', viewDashboard], orders: ['Orders', viewOrders], products: ['Products', viewProducts], categories: ['Categories', viewCategories], odoo: ['Odoo sync', viewOdoo], settings: ['Settings', viewSettings], more: ['More', viewMore] };
+  const VIEWS = { '': ['Dashboard', viewDashboard], orders: ['Orders', viewOrders], products: ['Products', viewProducts], categories: ['Categories', viewCategories], odoo: ['Odoo sync', viewOdoo], offers: ['Offers', viewOffers], abandoned: ['Abandoned carts', viewAbandoned], settings: ['Settings', viewSettings], more: ['More', viewMore] };
   async function route() {
     const r = (location.hash.replace(/^#\/?/, '').split('/')[0]) || '';
     const [title, fn] = VIEWS[r] || VIEWS[''];

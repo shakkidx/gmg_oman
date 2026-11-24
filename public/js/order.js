@@ -76,14 +76,20 @@
         if (state === 'pending') await new Promise(r => setTimeout(r, 2000));
       }
     }
+    if (state === 'fail') { location.replace(`/checkout?payment=failed&order=${encodeURIComponent(orderNo)}`); return; }
     if (state === 'ok') {
       // Meta Pixel: report the purchase once per order
+      // Uses the amounts the server stored for this order (saved at checkout); event_id = order number,
+      // the same id the server sends through the Conversions API, so Meta counts it once.
       try {
         const key = 'gmg_px_' + orderNo;
-        const items = Cart.items();
-        if (window.fbq && !sessionStorage.getItem(key) && items.length) {
-          fbq('track', 'Purchase', { content_ids: items.map(i => i.sku), content_type: 'product', num_items: items.reduce((n, i) => n + i.qty, 0), value: items.reduce((v, i) => v + i.price_baisa * i.qty, 0) / 1000, currency: 'OMR' }, { eventID: orderNo });
-          sessionStorage.setItem(key, '1');
+        let data = null;
+        try { data = JSON.parse(localStorage.getItem('gmg_purchase_' + orderNo) || 'null'); } catch (e) { /* ignore */ }
+        if (!data) { const items = Cart.items(); if (items.length) data = { value: Cart.subtotal() / 1000, currency: 'OMR', ...window.GMG.pixelContents(items) }; }
+        if (data && !localStorage.getItem(key)) {
+          window.GMG.track('Purchase', { content_type: 'product', ...data, currency: 'OMR' }, orderNo);
+          localStorage.setItem(key, '1');
+          localStorage.removeItem('gmg_purchase_' + orderNo);
         }
       } catch (e) { /* ignore */ }
       Cart.clear();
@@ -91,7 +97,7 @@
 
     const head = {
       ok: `<div class="confirm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path class="check" d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
-           <h1>${t('Thank you — order received!')}</h1><p class="lead">${fromThawani ? t('Your payment was successful. ') : ''}${t('We’ll call or WhatsApp you to confirm delivery. Keep your order number handy.')}</p>`,
+           <h1>${t('Thank you — order received!')}</h1><p class="lead">${fromThawani ? t('Your payment was successful. ') : ''}${t('We will contact you on WhatsApp to confirm delivery.')}</p>`,
       pending: `<div class="confirm-icon pending">${I.refresh}</div><h1>${t('Payment not confirmed yet')}</h1><p class="lead">${t('If money was taken from your card, your order is safe — we’ll confirm it shortly. Otherwise you can try paying again.')}</p>`,
       fail: `<div class="confirm-icon fail">${I.close}</div><h1>${t('Payment was not completed')}</h1><p class="lead">${t('No money was taken. Your cart is still saved — try again or choose cash on delivery.')}</p>`
     }[state];

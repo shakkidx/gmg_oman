@@ -11,7 +11,7 @@
 
     // Trust strip
     $('#trustRow').innerHTML = [
-      [I.truck, 'Free delivery over OMR 25', 'All 11 governorates'],
+      [I.truck, 'Free delivery all over Oman', 'All 11 governorates'],
       [I.lock, 'Secure Thawani checkout', 'Cards or cash on delivery'],
       [I.shield, '1-year warranty', 'Genuine MEVRIO products'],
       [I.refresh, '14-day returns', 'Hassle-free exchange']

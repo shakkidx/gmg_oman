@@ -111,7 +111,7 @@ img { display: block; max-width: 100%; }
 .seg button.on { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(11,21,48,.1); }
 
 /* Lists / tables */
-.list { display: grid; }
+.list { display: grid; grid-template-columns: minmax(0, 1fr); }
 .row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line-2); }
 .row:last-child { border-bottom: 0; }
 .row .thumb { width: 44px; height: 44px; border-radius: 10px; background: var(--surface); padding: 4px; flex: 0 0 44px; }

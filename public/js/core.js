@@ -38,6 +38,20 @@
   document.documentElement.dir = RTL ? 'rtl' : 'ltr';
   // English text is the key; Arabic is looked up. Missing entries simply stay in English.
   const AR = {
+    'Free delivery all over Oman': 'توصيل مجاني لجميع أنحاء عُمان', 'Buy now': 'اشترِ الآن', 'Add to cart': 'أضف إلى السلة', 'Order on WhatsApp': 'اطلب عبر واتساب',
+    'Offer ends 30 November': 'ينتهي العرض في ٣٠ نوفمبر', 'Offer ends in {x}': 'ينتهي العرض خلال {x}', '{d}d {h}h {m}m': '{d}ي {h}س {m}د', '{h}h {m}m': '{h}س {m}د',
+    'Offer ended': 'انتهى العرض', 'The offer has ended. Prices are back to normal.': 'انتهى العرض. عادت الأسعار إلى طبيعتها.', 'Shop all products': 'تسوّق جميع المنتجات',
+    'Offer starts {x}': 'يبدأ العرض {x}', 'Offer price': 'سعر العرض', 'You save {x}': 'وفّر {x}', 'VAT included': 'شامل الضريبة',
+    'The offer on {name} has ended — price is now {x}.': 'انتهى العرض على {name} — السعر الآن {x}.', 'The price of {name} changed to {x}.': 'تغيّر سعر {name} إلى {x}.',
+    'Delivery': 'التوصيل', 'Full address / area': 'العنوان / المنطقة', 'Area, way, building or villa no., landmark': 'المنطقة، رقم السكة، رقم المبنى أو الفيلا، علامة مميزة', 'Please enter your area and address.': 'يرجى إدخال المنطقة والعنوان.',
+    'Hello GMG, I would like to order:': 'مرحباً GMG، أود طلب:', 'Total: {x}': 'الإجمالي: {x}', 'Delivery: Free': 'التوصيل: مجاني', 'Name: {x}': 'الاسم: {x}', 'Area: {x}': 'المنطقة: {x}',
+    'Review your order': 'راجع طلبك', 'We will contact you on WhatsApp to confirm delivery.': 'سنتواصل معك عبر واتساب لتأكيد التوصيل.',
+    'Your card payment did not go through, so no money was taken. Your cart and details are saved — try again or choose cash on delivery.': 'لم تتم عملية الدفع بالبطاقة ولم يتم خصم أي مبلغ. سلتك وبياناتك محفوظة — حاول مرة أخرى أو اختر الدفع عند الاستلام.',
+    'Your card payment was cancelled, so no money was taken. Your cart and details are saved — try again or choose cash on delivery.': 'تم إلغاء الدفع بالبطاقة ولم يتم خصم أي مبلغ. سلتك وبياناتك محفوظة — حاول مرة أخرى أو اختر الدفع عند الاستلام.',
+    'Muscat 1–2 days · other governorates 2–5 days': 'مسقط ١–٢ يوم · باقي المحافظات ٢–٥ أيام', '+ {p}% VAT': '+ ضريبة {p}٪',
+    'Your details': 'بياناتك', 'Order summary': 'ملخص الطلب', 'Select governorate': 'اختر المحافظة',
+    'View offers': 'شاهد العروض',
+    'Prices in your cart were updated.': 'تم تحديث الأسعار في سلتك.', 'or': 'أو', 'Offer': 'عرض',
     // header / nav / footer
     'Shop all': 'كل المنتجات', 'Power Banks': 'بنوك الطاقة', 'Chargers': 'الشواحن', 'Cables': 'الكابلات', 'Car Chargers': 'شواحن السيارة',
     'Home': 'الرئيسية', 'All products': 'جميع المنتجات', 'Track order': 'تتبع الطلب', 'Contact us': 'اتصل بنا', 'Categories': 'الفئات', 'Shop': 'تسوّق', 'Cart': 'السلة', 'Track': 'تتبع',
@@ -113,7 +127,7 @@
     'Gallium-nitride chips waste less energy as heat, so MEVRIO GaN chargers deliver laptop-class power from a plug that fits in your palm — with the UK 3-pin plug used across Oman.': 'رقائق نيتريد الغاليوم تهدر طاقة أقل على شكل حرارة، لذلك تمنحك شواحن ميفريو GaN قوة تكفي للحاسوب المحمول من شاحن صغير بحجم راحة اليد — بالقابس البريطاني الثلاثي المستخدم في عُمان.',
     'USB-C PD output': 'خرج USB-C PD', 'smaller than silicon': 'أصغر من السيليكون', 'BS 1363 UK plug': 'قابس بريطاني BS 1363', 'Shop GaN chargers': 'تسوّق شواحن GaN', 'The collection': 'التشكيلة',
     'Charge everything you carry': 'اشحن كل ما تحمله', 'View all': 'عرض الكل', 'Genuine &amp; certified': 'أصلية ومعتمدة', 'Official MEVRIO products with over-heat, over-charge and short-circuit protection built in.': 'منتجات ميفريو الرسمية مع حماية مدمجة من الحرارة الزائدة والشحن الزائد وقصر الدائرة.',
-    'Delivered across Oman': 'توصيل لجميع أنحاء عُمان', '1–2 days in Muscat and 2–5 days to every other governorate. Free over OMR 25.': '١–٢ يوم داخل مسقط و٢–٥ أيام لباقي المحافظات. مجاناً فوق ٢٥ ر.ع.',
+    'Delivered across Oman': 'توصيل لجميع أنحاء عُمان', '1–2 days in Muscat and 2–5 days to every other governorate. Free delivery all over Oman.': '١–٢ يوم داخل مسقط و٢–٥ أيام لباقي المحافظات. توصيل مجاني لجميع أنحاء عُمان.',
     'If something isn’t right, we repair or replace it from our Al Khuwair service desk.': 'إذا واجهت أي مشكلة، نصلح المنتج أو نستبدله من مركز الخدمة في الخوير.', 'Shop by category ': 'تسوّق حسب الفئة',
     'Checkout ': 'إتمام الشراء', 'We’re here to help': 'نحن هنا لمساعدتك', 'Questions about a product, an order or a delivery? The fastest way to reach us is WhatsApp.': 'لديك سؤال عن منتج أو طلب أو توصيل؟ أسرع طريقة للتواصل معنا هي واتساب.',
     'Delivery, returns &amp; policies': 'التوصيل والإرجاع والسياسات', 'Operating under the commercial and consumer protection laws of the Sultanate of Oman.': 'نعمل وفقاً للقوانين التجارية وقانون حماية المستهلك في سلطنة عُمان.', 'Policies': 'السياسات'
@@ -164,6 +178,27 @@
     return data;
   }
 
+  const cookie = n => { const m = document.cookie.match(new RegExp('(?:^|; )' + n + '=([^;]*)')); return m ? decodeURIComponent(m[1]) : null; };
+  /** Meta Pixel call that never throws. eventID lets the server (Conversions API) send the same event without double counting. */
+  function track(name, params, eventID) { try { if (window.fbq) eventID ? fbq('track', name, params, { eventID }) : fbq('track', name, params); } catch (e) { /* ignore */ } }
+  const pixelContents = items => ({ content_ids: items.map(i => i.sku), contents: items.map(i => ({ id: i.sku, quantity: i.qty })), content_type: 'product', num_items: items.reduce((n, i) => n + i.qty, 0) });
+  /** wa.me link with the cart written out: product, quantity, line price and the total. */
+  function waOrderLink(items, totalBaisa, extra) {
+    const num = ((storeInfo && storeInfo.whatsapp) || '').replace(/\D/g, '');
+    if (!num) return '';
+    const lines = [t('Hello GMG, I would like to order:'), ''];
+    items.forEach(i => lines.push(`• ${i.name} × ${i.qty} — ${omr(i.price_baisa * i.qty)}`));
+    lines.push('', t('Delivery: Free'), t('Total: {x}', { x: omr(totalBaisa != null ? totalBaisa : items.reduce((s, i) => s + i.price_baisa * i.qty, 0)) }));
+    if (extra) lines.push('', ...extra.filter(Boolean));
+    return `https://wa.me/${num}?text=${encodeURIComponent(lines.join('\n'))}`;
+  }
+  /** "Offer ends in 6d 4h 12m" text for an end time, or '' when it has passed. */
+  function offerLeft(endsAt) {
+    const ms = Date.parse(endsAt) - Date.now(); if (!(ms > 0)) return '';
+    const d = Math.floor(ms / 864e5), h = Math.floor(ms % 864e5 / 36e5), m = Math.floor(ms % 36e5 / 6e4);
+    return t('Offer ends in {x}', { x: d ? t('{d}d {h}h {m}m', { d, h, m }) : t('{h}h {m}m', { h, m }) });
+  }
+
   const store = {
     get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* private mode */ } }
@@ -184,11 +219,13 @@
       let line = items.find(i => i.sku === p.sku);
       const before = line ? line.qty : 0;
       if (!line) {
-        line = { sku: p.sku, slug: p.slug, name: p.name, image: p.image, price_baisa: p.price_baisa, retail_baisa: p.retail_baisa, max_qty: max, qty: 0 };
+        line = { sku: p.sku, slug: p.slug, name: p.name, image: p.image, price_baisa: p.price_baisa, retail_baisa: p.retail_baisa, offer: p.offer || null, max_qty: max, qty: 0 };
         items.push(line);
       }
       line.max_qty = max;
       line.price_baisa = p.price_baisa;
+      line.retail_baisa = p.retail_baisa;
+      line.offer = p.offer || null;
       line.qty = Math.min(max, line.qty + qty);
       this.save(items.filter(i => i.qty > 0));
       return { added: line.qty - before, qty: line.qty, max };
@@ -208,12 +245,13 @@
       if (!items.length) return [];
       const notes = [];
       try {
-        const res = await api('/api/cart/validate', { method: 'POST', body: { items: items.map(i => ({ sku: i.sku, quantity: i.qty })) } });
+        const res = await api('/api/cart/validate', { method: 'POST', body: { items: items.map(i => ({ sku: i.sku, quantity: i.qty, price_baisa: i.price_baisa })) } });
         const next = [];
         for (const it of items) {
           const v = res.items.find(x => x.sku === it.sku);
           if (!v || v.valid === false || !v.is_in_stock) { notes.push(t('{name} is sold out and was removed.', { name: it.name })); continue; }
-          const line = { ...it, price_baisa: v.unit_price_baisa, max_qty: v.max_qty, slug: v.slug || it.slug, image: v.image_url || it.image, name: v.name || it.name };
+          const line = { ...it, price_baisa: v.unit_price_baisa, retail_baisa: v.original_price_baisa, offer: v.offer ? v.offer.name : null, max_qty: v.max_qty, slug: v.slug || it.slug, image: v.image_url || it.image, name: v.name || it.name };
+          if (it.price_baisa !== v.unit_price_baisa) notes.push(it.offer && !v.offer ? t('The offer on {name} has ended — price is now {x}.', { name: line.name, x: omr(v.unit_price_baisa) }) : t('The price of {name} changed to {x}.', { name: line.name, x: omr(v.unit_price_baisa) }));
           if (it.qty > v.max_qty) { notes.push(t('Only {n} × {name} can be ordered — quantity updated.', { n: v.max_qty, name: v.name || it.name })); line.qty = v.max_qty; }
           next.push(line);
         }
@@ -262,7 +300,7 @@
     const OFFER_ON = Date.now() <= Date.parse('2026-11-30T23:59:59+04:00');
     slot.outerHTML = `
       ${OFFER_ON ? `<a class="promo-strip" href="/offers/">${RTL ? '🇴🇲 عروض العيد الوطني · خصم حتى ٤١٪<span class="ps-dates"> · من ٢٠ إلى ٣٠ نوفمبر</span> <b>شاهد العروض ←</b>' : '🇴🇲 National Day · Up to 41% off<span class="ps-dates"> · 20–30 Nov</span> <b>View offers →</b>'}</a>` : ''}
-      <div class="announce" id="announce">${RTL ? 'توصيل مجاني لجميع أنحاء عُمان للطلبات فوق <b>٢٥ ر.ع.</b>' : 'Free delivery across Oman on orders over <b>OMR 25</b>'}</div>
+      <div class="announce" id="announce">${t('Free delivery all over Oman')}</div>
       <header class="site-header" id="siteHeader">
         <div class="wrap header-row">
           <div class="header-left">
@@ -369,7 +407,7 @@
           const r = await api(`/api/products?search=${encodeURIComponent(q)}&limit=8`);
           if (my !== seq) return;
           results.innerHTML = r.data.length
-            ? r.data.map(p => `<a class="search-hit" href="/product/${esc(p.slug)}"><span class="thumb"><img src="${thumb(p.primary_image, 480)}" alt=""></span><span><b>${esc(p.name)}</b><span>${esc(p.category.name)} · ${p.available ? omr(p.pricing.current_baisa) : t('Sold out')}</span></span></a>`).join('') +
+            ? r.data.map(p => `<a class="search-hit" href="/product/${esc(p.slug)}"><span class="thumb"><img src="${thumb(p.primary_image, 480)}" alt=""></span><span><b>${esc(p.name)}</b><span>${esc(p.category.name)} · ${p.available ? omr(p.pricing.current_baisa) + (p.pricing.is_on_sale ? ` <s>${omr(p.pricing.retail_baisa)}</s>` : '') : t('Sold out')}</span></span></a>`).join('') +
               `<a class="link-arrow" style="margin-top:16px" href="/shop?q=${encodeURIComponent(q)}">${t('See all results')} ${I.arrow}</a>`
             : `<p class="search-empty">${t('No products match “{q}”. Try “charger”, “cable” or “power bank”.', { q: esc(q) })}</p>`;
         } catch (e) { /* ignore */ }
@@ -547,7 +585,8 @@
 
   // ---------- Cart drawer ----------
   function shipProgressHtml(subtotal) {
-    const th = (storeInfo && storeInfo.free_shipping_threshold_baisa) || 25000;
+    const th = storeInfo && storeInfo.free_shipping_threshold_baisa != null ? storeInfo.free_shipping_threshold_baisa : 25000;
+    if (th <= 0) return `<div class="ship-progress"><p>${I.truck.replace('<svg', '<svg width="18" height="18" style="vertical-align:-4px"')} <b>${t('Free delivery all over Oman')}</b></p></div>`;
     const pct = Math.min(100, Math.round(subtotal / th * 100));
     const left = th - subtotal;
     return `<div class="ship-progress"><p>${left > 0 ? t('Add {x} more for free delivery', { x: `<b>${omr(left)}</b>` }) : `<b>${t('You get free delivery on this order')}</b>`}</p><div class="ship-bar"><i style="width:${pct}%"></i></div></div>`;
@@ -557,7 +596,7 @@
       <a class="thumb" href="/product/${esc(it.slug)}"><img src="${thumb(it.image, 480)}" alt=""></a>
       <div>
         <a class="name" href="/product/${esc(it.slug)}">${esc(it.name)}</a>
-        <div class="unit">${omr(it.price_baisa)}</div>
+        <div class="unit">${omr(it.price_baisa)}${it.retail_baisa > it.price_baisa ? ` <s>${omr(it.retail_baisa)}</s>` : ''}${it.offer ? ` <span class="offer-tag">${esc(it.offer)}</span>` : ''}</div>
         <div class="qty sm" role="group" aria-label="${t('Quantity')}">
           <button type="button" data-dec aria-label="${t('Decrease')}">−</button>
           <input type="number" value="${it.qty}" min="1" max="${it.max_qty}" aria-label="${t('Quantity')}" readonly>
@@ -594,7 +633,7 @@
     foot.style.display = '';
     const sub = Cart.subtotal();
     body.innerHTML = shipProgressHtml(sub) + `<div class="mini-items">${items.map(i => lineHtml(i, true)).join('')}</div>`;
-    foot.innerHTML = `<div class="row"><span>${t('Subtotal')}</span><span>${omr(sub)}</span></div><small>${t('Delivery and VAT calculated at checkout.')}</small>
+    foot.innerHTML = `<div class="row"><span>${t('Subtotal')}</span><span>${omr(sub)}</span></div><small>${t('Free delivery all over Oman')}</small>
       <a class="btn btn-primary btn-block" href="/checkout">${t('Checkout')} ${I.arrow}</a><a class="btn btn-ghost btn-block" href="/cart">${t('View cart')}</a>`;
   }
   function updateCount(bump) {
@@ -635,7 +674,7 @@
     if (r.added <= 0) { toast(t('You already have the maximum available ({n}) in your cart.', { n: r.max }), 'error'); return false; }
     await flyToCart(fromEl);
     updateCount(true);
-    try { if (window.fbq) fbq('track', 'AddToCart', { content_ids: [p.sku], content_name: p.name, content_type: 'product', value: (p.price_baisa * r.added) / 1000, currency: 'OMR' }); } catch (e) { /* ignore */ }
+    track('AddToCart', { content_ids: [p.sku], contents: [{ id: p.sku, quantity: r.added }], content_name: p.name, content_type: 'product', num_items: r.added, value: (p.price_baisa * r.added) / 1000, currency: 'OMR' });
     if (r.added < qty) toast(t("Added {n} — that's the maximum available right now.", { n: r.added }));
     else toast(t('Added to cart'));
     if (openDrawer) window.GMG_openCart();
@@ -644,7 +683,7 @@
 
   // ---------- Product card ----------
   function productFromApi(p) {
-    return { sku: p.sku, slug: p.slug, name: p.name, image: p.primary_image, price_baisa: p.pricing.current_baisa, retail_baisa: p.pricing.retail_baisa, max_qty: p.max_qty };
+    return { sku: p.sku, slug: p.slug, name: p.name, image: p.primary_image, price_baisa: p.pricing.current_baisa, retail_baisa: p.pricing.retail_baisa, offer: p.pricing.offer ? p.pricing.offer.name : null, max_qty: p.max_qty };
   }
   function cardHtml(p) {
     const sale = p.pricing.is_on_sale;
@@ -698,5 +737,5 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 
-  window.GMG = { t, LANG, RTL, setLang, translateStatic, I, $, $$, esc, omr, thumb, api, Cart, toast, addToCart, cardHtml, bindCards, productFromApi, skeletonCards, reveal, storeReady, categoriesReady, lineHtml, bindLines, emptyCartHtml, shipProgressHtml, flyToCart, updateCount };
+  window.GMG = { t, LANG, RTL, setLang, translateStatic, I, $, $$, esc, omr, thumb, api, Cart, toast, addToCart, cardHtml, bindCards, productFromApi, skeletonCards, reveal, storeReady, categoriesReady, lineHtml, bindLines, emptyCartHtml, shipProgressHtml, flyToCart, updateCount, track, pixelContents, waOrderLink, offerLeft, cookie, store: () => storeInfo };
 })();

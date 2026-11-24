@@ -730,3 +730,19 @@ html.css-wait body { opacity: 1; }
 @media (max-width: 420px) { .offer-btn { height: 32px; padding: 0 10px; font-size: 12px; } }
 .mobile-nav .offer-row { color: #C8102E; font-weight: 800; }
 @media (max-width: 480px) { .promo-strip .ps-dates { display: none; } .promo-strip { font-size: 12.5px; } }
+
+/* ---------- Offers, free delivery, WhatsApp order (Nov 2026) ---------- */
+.offer-tag { display: inline-block; font: 700 10.5px/1 var(--text); letter-spacing: .02em; color: #b3261e; background: #fdecea; border-radius: 999px; padding: 4px 8px; vertical-align: middle; white-space: nowrap; }
+.line-item .unit s, .co-item s { color: var(--muted); font-weight: 400; margin-inline-start: 6px; font-size: 12px; }
+.co-item s { display: block; margin: 0; }
+.co-item span { text-align: end; }
+.co-item small.offer-tag { display: table; margin-top: 4px; font-size: 10px; }
+.btn-wa { background: #25d366; color: #fff; margin-top: 10px; }
+.btn-wa:hover { background: #1ebe5b; box-shadow: 0 8px 24px rgba(37, 211, 102, .3); }
+.offer-note { background: #fff6e5; color: #8a4b00; border-radius: 10px; padding: 9px 12px; font-size: 13px; font-weight: 600; margin: 8px 0 12px; }
+.free-del { background: #e9f7ef; color: var(--ok); border-radius: 10px; padding: 10px 12px; font-size: 14px; margin: -4px 0 16px; }
+.sum-row.save b, .sum-row.save span { color: var(--ok); }
+.sum-row.muted span { color: var(--muted); font-size: 13px; }
+.or-line { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12.5px; margin: 12px 0 0; }
+.or-line::before, .or-line::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.pdp-offer { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; color: #8a4b00; font-weight: 600; margin: 6px 0 4px; }

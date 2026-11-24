@@ -13,8 +13,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Sora:wght@500;600&display=swap" rel="stylesheet">
 <style>html.css-wait body{opacity:0}</style><script>document.documentElement.classList.add("css-wait");setTimeout(function(){document.documentElement.classList.remove("css-wait")},3500)</script>
-<link rel="stylesheet" href="/css/store.css?v=20261122b">
-<script src="/js/core.js?v=20261122b" defer></script>
+<link rel="stylesheet" href="/css/store.css?v=20261124a">
+<script src="/js/core.js?v=20261124a" defer></script>
 <!-- Meta Pixel Code -->
 <script>
 !function(f,b,e,v,n,t,s)
@@ -94,7 +94,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const c = r.data;
     const rows = c.governorates.map(g => `<tr><td>${esc(RTL ? g.name_ar : g.name_en)}</td><td>${esc(omr(g.delivery_fee_baisa))}</td><td>${esc(t('{d} days', { d: String(g.delivery_days).replace(/\s*days?/, '') }))}</td></tr>`).join('');
     document.getElementById(RTL ? 'feeRowsAr' : 'feeRows').innerHTML = rows;
-    document.getElementById(RTL ? 'freeThAr' : 'freeTh').textContent = omr(c.free_shipping_threshold_baisa);
+    const th = document.getElementById(RTL ? 'freeThAr' : 'freeTh');
+    if (c.free_shipping_threshold_baisa <= 0) th.parentNode.innerHTML = RTL ? '<b>توصيل مجاني لجميع أنحاء عُمان</b> على جميع الطلبات.' : '<b>Free delivery all over Oman</b> on every order.';
+    else th.textContent = omr(c.free_shipping_threshold_baisa);
   }).catch(() => {});
   storeReady.then(s => {
     const line = RTL
