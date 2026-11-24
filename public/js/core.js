@@ -354,6 +354,7 @@
     onScroll();
 
     // Drawers
+    if ($('#drawerBody')) bindLines($('#drawerBody')); // + / − / Remove inside the cart drawer
     const backdrop = $('#backdrop');
     let lastFocus = null;
     const openDrawer = id => {
