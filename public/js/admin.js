@@ -108,8 +108,8 @@
     const paid = o.payment_method === 'thawani' && o.payment_status === 'paid';
     const where = [o.delivery_address, o.delivery_city, o.delivery_governorate].filter((v, i, a) => v && a.indexOf(v) === i).join(', ');
     return ar
-      ? `مرحباً ${o.customer_name}، شكراً لطلبك من GMG Oman 🇴🇲\nرقم الطلب: ${o.order_number}${list ? '\n' + list : ''}\nالإجمالي: ${total} ر.ع. (${paid ? 'مدفوع بالبطاقة' : 'الدفع عند الاستلام'})\nالتوصيل مجاني إلى: ${where}\nيرجى الرد بـ "نعم" لتأكيد الطلب وسنقوم بالتوصيل خلال ١–٣ أيام.`
-      : `Hello ${o.customer_name}, thank you for your order from GMG Oman 🇴🇲\nOrder: ${o.order_number}${list ? '\n' + list : ''}\nTotal: OMR ${total} (${paid ? 'paid by card' : 'cash on delivery'})\nFree delivery to: ${where}\nPlease reply YES to confirm and we will deliver within 1–3 days.`;
+      ? `مرحباً ${o.customer_name}، شكراً لطلبك من GMG Oman 🇴🇲\nرقم الطلب: ${o.order_number}${list ? '\n' + list : ''}\nالإجمالي: ${total} ر.ع. (${paid ? 'مدفوع بالبطاقة' : 'الدفع عند الاستلام'})\nالتوصيل مجاني إلى: ${where}\nيرجى الرد بـ "نعم" لتأكيد الطلب وسنقوم بترتيب التوصيل.`
+      : `Hello ${o.customer_name}, thank you for your order from GMG Oman 🇴🇲\nOrder: ${o.order_number}${list ? '\n' + list : ''}\nTotal: OMR ${total} (${paid ? 'paid by card' : 'cash on delivery'})\nFree delivery to: ${where}\nPlease reply YES to confirm and we will arrange the delivery.`;
   }
   const waUrl = (phone, text) => `https://wa.me/${String(phone || '').replace(/\D/g, '')}?text=${encodeURIComponent(text)}`;
 

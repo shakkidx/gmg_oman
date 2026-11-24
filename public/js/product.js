@@ -54,7 +54,7 @@
         <p class="qty-hint" id="qHint" aria-live="polite"></p>
         ${soldOut ? '' : `<button class="btn btn-blue btn-block pdp-buynow" type="button" id="buyNow">${t('Buy now')}</button>`}
         <div class="perks">
-          <div class="perk">${I.truck}<div><b>${t('Delivery across Oman')}</b><span>${t('Free delivery all over Oman')} · ${t('Muscat 1–2 days · other governorates 2–5 days')}</span></div></div>
+          <div class="perk">${I.truck}<div><b>${t('Delivery across Oman')}</b><span>${t('Free delivery all over Oman')} · ${t('Same-day delivery in Muscat and nearby areas')}</span></div></div>
           <div class="perk">${I.lock}<div><b>${t('Pay your way')}</b><span>${t('Thawani Pay (Visa, Mastercard, debit) or cash on delivery')}</span></div></div>
           <div class="perk">${I.shield}<div><b>${t('1-year warranty')}</b><span>${t('Genuine product · 14-day returns on defects')}</span></div></div>
         </div>

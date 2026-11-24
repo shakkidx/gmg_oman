@@ -14,8 +14,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Sora:wght@500;600&display=swap" rel="stylesheet">
 <style>html.css-wait body{opacity:0}</style><script>document.documentElement.classList.add("css-wait");setTimeout(function(){document.documentElement.classList.remove("css-wait")},3500)</script>
-<link rel="stylesheet" href="/css/store.css?v=20261124a">
-<script src="/js/core.js?v=20261124a" defer></script>
+<link rel="stylesheet" href="/css/store.css?v=20261124c">
+<script src="/js/core.js?v=20261124c" defer></script>
 <!-- Meta Pixel Code -->
 <script>
 !function(f,b,e,v,n,t,s)
@@ -44,8 +44,8 @@ src="https://www.facebook.com/tr?id=1771412000609622&ev=PageView&noscript=1"
   </div>
   <div class="wrap prose" data-only="en">
     <h2 id="delivery">Delivery across Oman</h2>
-    <p>We ship from our warehouse in Muscat to all 11 governorates. Orders confirmed before 2 pm are usually dispatched the same working day.</p>
-    <table class="fee-table"><thead><tr><th>Governorate</th><th>Delivery fee</th><th>Time</th></tr></thead><tbody id="feeRows"><tr><td colspan="3">Loading…</td></tr></tbody></table>
+    <p>We ship from our warehouse in Muscat to all 11 governorates. Orders confirmed before 2 pm are usually dispatched the same working day, and we deliver the same day in Muscat and nearby areas. Delivery is free all over Oman.</p>
+    <table class="fee-table"><thead><tr><th>Governorate</th><th>Delivery fee</th></tr></thead><tbody id="feeRows"><tr><td colspan="2">Loading…</td></tr></tbody></table>
     <p style="margin-top:14px"><b>Free delivery</b> on orders of <span id="freeTh">OMR 25.000</span> or more.</p>
 
     <h2 id="payment">Payment</h2>
@@ -66,8 +66,8 @@ src="https://www.facebook.com/tr?id=1771412000609622&ev=PageView&noscript=1"
   </div>
   <div class="wrap prose" data-only="ar">
     <h2 id="delivery">التوصيل داخل عُمان</h2>
-    <p>نشحن من مستودعنا في مسقط إلى جميع المحافظات الإحدى عشرة. الطلبات المؤكدة قبل الساعة ٢ ظهراً تُشحن عادةً في نفس يوم العمل.</p>
-    <table class="fee-table"><thead><tr><th>المحافظة</th><th>رسوم التوصيل</th><th>المدة</th></tr></thead><tbody id="feeRowsAr"><tr><td colspan="3">جارٍ التحميل…</td></tr></tbody></table>
+    <p>نشحن من مستودعنا في مسقط إلى جميع المحافظات الإحدى عشرة. الطلبات المؤكدة قبل الساعة ٢ ظهراً تُشحن عادةً في نفس يوم العمل، ونوصّل في نفس اليوم داخل مسقط والمناطق القريبة. التوصيل مجاني لجميع أنحاء عُمان.</p>
+    <table class="fee-table"><thead><tr><th>المحافظة</th><th>رسوم التوصيل</th></tr></thead><tbody id="feeRowsAr"><tr><td colspan="2">جارٍ التحميل…</td></tr></tbody></table>
     <p style="margin-top:14px"><b>توصيل مجاني</b> للطلبات بقيمة <span id="freeThAr">٢٥ ر.ع.</span> أو أكثر.</p>
 
     <h2 id="payment">الدفع</h2>
@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const { api, esc, storeReady, RTL, omr, t } = window.GMG;
   api('/api/checkout/config').then(r => {
     const c = r.data;
-    const rows = c.governorates.map(g => `<tr><td>${esc(RTL ? g.name_ar : g.name_en)}</td><td>${esc(omr(g.delivery_fee_baisa))}</td><td>${esc(t('{d} days', { d: String(g.delivery_days).replace(/\s*days?/, '') }))}</td></tr>`).join('');
+    const rows = c.governorates.map(g => `<tr><td>${esc(RTL ? g.name_ar : g.name_en)}</td><td>${g.delivery_fee_baisa ? esc(omr(g.delivery_fee_baisa)) : (RTL ? 'مجاناً' : 'Free')}</td></tr>`).join('');
     document.getElementById(RTL ? 'feeRowsAr' : 'feeRows').innerHTML = rows;
     const th = document.getElementById(RTL ? 'freeThAr' : 'freeTh');
     if (c.free_shipping_threshold_baisa <= 0) th.parentNode.innerHTML = RTL ? '<b>توصيل مجاني لجميع أنحاء عُمان</b> على جميع الطلبات.' : '<b>Free delivery all over Oman</b> on every order.';

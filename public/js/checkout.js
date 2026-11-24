@@ -51,8 +51,7 @@
     // ---------- Config: governorates & payment methods ----------
     let config;
     try { config = (await api('/api/checkout/config' + (thawaniTest ? '?thawani_test=1' : ''))).data; } catch (e) { toast(t('Could not load checkout. Please refresh.'), 'error'); return; }
-    const days = d => t('{d} days', { d: String(d).replace(/\s*days?/, '') });
-    $('#fGov').innerHTML = `<option value="">${t('Select governorate')}</option>` + config.governorates.map(g => `<option value="${esc(g.code)}">${esc(RTL ? g.name_ar : g.name_en)} — ${g.delivery_fee_baisa ? omr(g.delivery_fee_baisa) : t('Free')} · ${esc(days(g.delivery_days))}</option>`).join('');
+    $('#fGov').innerHTML = `<option value="">${t('Select governorate')}</option>` + config.governorates.map(g => `<option value="${esc(g.code)}">${esc(RTL ? g.name_ar : g.name_en)}${g.delivery_fee_baisa ? ` — ${omr(g.delivery_fee_baisa)}` : ''}</option>`).join('');
 
     const methods = config.payment_methods.filter(m => m.is_active).sort((a, b) => (a.id === 'thawani' ? -1 : 0) - (b.id === 'thawani' ? -1 : 0));
     $('#payOptions').innerHTML = methods.map((m, i) => `

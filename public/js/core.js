@@ -48,7 +48,7 @@
     'Review your order': 'راجع طلبك', 'We will contact you on WhatsApp to confirm delivery.': 'سنتواصل معك عبر واتساب لتأكيد التوصيل.',
     'Your card payment did not go through, so no money was taken. Your cart and details are saved — try again or choose cash on delivery.': 'لم تتم عملية الدفع بالبطاقة ولم يتم خصم أي مبلغ. سلتك وبياناتك محفوظة — حاول مرة أخرى أو اختر الدفع عند الاستلام.',
     'Your card payment was cancelled, so no money was taken. Your cart and details are saved — try again or choose cash on delivery.': 'تم إلغاء الدفع بالبطاقة ولم يتم خصم أي مبلغ. سلتك وبياناتك محفوظة — حاول مرة أخرى أو اختر الدفع عند الاستلام.',
-    'Muscat 1–2 days · other governorates 2–5 days': 'مسقط ١–٢ يوم · باقي المحافظات ٢–٥ أيام', '+ {p}% VAT': '+ ضريبة {p}٪',
+    'Same-day delivery in Muscat and nearby areas': 'توصيل في نفس اليوم داخل مسقط والمناطق القريبة', '+ {p}% VAT': '+ ضريبة {p}٪',
     'Your details': 'بياناتك', 'Order summary': 'ملخص الطلب', 'Select governorate': 'اختر المحافظة',
     'View offers': 'شاهد العروض',
     'Prices in your cart were updated.': 'تم تحديث الأسعار في سلتك.', 'or': 'أو', 'Offer': 'عرض',
@@ -127,7 +127,7 @@
     'Gallium-nitride chips waste less energy as heat, so MEVRIO GaN chargers deliver laptop-class power from a plug that fits in your palm — with the UK 3-pin plug used across Oman.': 'رقائق نيتريد الغاليوم تهدر طاقة أقل على شكل حرارة، لذلك تمنحك شواحن ميفريو GaN قوة تكفي للحاسوب المحمول من شاحن صغير بحجم راحة اليد — بالقابس البريطاني الثلاثي المستخدم في عُمان.',
     'USB-C PD output': 'خرج USB-C PD', 'smaller than silicon': 'أصغر من السيليكون', 'BS 1363 UK plug': 'قابس بريطاني BS 1363', 'Shop GaN chargers': 'تسوّق شواحن GaN', 'The collection': 'التشكيلة',
     'Charge everything you carry': 'اشحن كل ما تحمله', 'View all': 'عرض الكل', 'Genuine &amp; certified': 'أصلية ومعتمدة', 'Official MEVRIO products with over-heat, over-charge and short-circuit protection built in.': 'منتجات ميفريو الرسمية مع حماية مدمجة من الحرارة الزائدة والشحن الزائد وقصر الدائرة.',
-    'Delivered across Oman': 'توصيل لجميع أنحاء عُمان', '1–2 days in Muscat and 2–5 days to every other governorate. Free delivery all over Oman.': '١–٢ يوم داخل مسقط و٢–٥ أيام لباقي المحافظات. توصيل مجاني لجميع أنحاء عُمان.',
+    'Delivered across Oman': 'توصيل لجميع أنحاء عُمان', 'Same-day delivery in Muscat and nearby areas. Free delivery all over Oman.': 'توصيل في نفس اليوم داخل مسقط والمناطق القريبة. توصيل مجاني لجميع أنحاء عُمان.',
     'If something isn’t right, we repair or replace it from our Al Khuwair service desk.': 'إذا واجهت أي مشكلة، نصلح المنتج أو نستبدله من مركز الخدمة في الخوير.', 'Shop by category ': 'تسوّق حسب الفئة',
     'Checkout ': 'إتمام الشراء', 'We’re here to help': 'نحن هنا لمساعدتك', 'Questions about a product, an order or a delivery? The fastest way to reach us is WhatsApp.': 'لديك سؤال عن منتج أو طلب أو توصيل؟ أسرع طريقة للتواصل معنا هي واتساب.',
     'Delivery, returns &amp; policies': 'التوصيل والإرجاع والسياسات', 'Operating under the commercial and consumer protection laws of the Sultanate of Oman.': 'نعمل وفقاً للقوانين التجارية وقانون حماية المستهلك في سلطنة عُمان.', 'Policies': 'السياسات'
