@@ -306,6 +306,7 @@ class ThawaniService {
     // Paid online orders are created in Odoo only now (required lazily to avoid a require cycle)
     const OdooService = require('../odoo/odooService');
     OdooService.syncOrderToOdoo(order.id).catch(err => console.error('Odoo sync after payment failed:', err.message));
+    require('../metaCapi').sendPurchase(order.id).catch(err => console.error('Meta CAPI after payment failed:', err.message));
   }
 
   /** Cancel an unpaid online order and return its stock. */

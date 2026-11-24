@@ -14,6 +14,7 @@ const ThawaniService = require('./services/thawani/thawaniService');
 const { getSetting } = require('./services/inventoryService');
 
 const app = express();
+app.set('trust proxy', 1); // behind Hostinger's proxy: req.ip is the customer's IP (used for Meta Conversions API matching)
 const PORT = process.env.PORT || 3000;
 
 // 1. Database: create tables, then add any missing settings / admin user / starter catalogue.
@@ -54,6 +55,9 @@ const PUBLIC_DIR = path.resolve(__dirname, '../public');
 }
 // Campaign pages live in their own folder (public/offers/…); make /offers open as /offers/ so relative images work.
 for (const p of ['/offers', '/offer', '/catalogue', '/national-day']) app.get(p, (req, res, next) => (req.path === '/offers/' ? next() : res.redirect(301, '/offers/')));
+// /offers/ is built on the server from Admin → Offers (live prices, countdown, "offer ended" after the end date)
+app.get('/offers/', require('./routes/offers'));
+app.get('/offers/catalogue', (req, res, next) => (req.path.endsWith('/') ? next() : res.redirect(301, '/offers/catalogue/')));
 
 let serveGz = () => false;
 // Gzip text files (CSS/JS/HTML/SVG) once and keep them in memory — mobile pages load several times faster.
@@ -145,6 +149,8 @@ app.use('/api/admin/uploads', require('./routes/api/admin/uploads'));
 app.use('/api/admin/orders', require('./routes/api/admin/orders'));
 app.use('/api/admin/odoo', require('./routes/api/admin/odoo'));
 app.use('/api/admin/settings', require('./routes/api/admin/settings'));
+app.use('/api/admin/offers', require('./routes/api/admin/offers'));
+app.use('/api/admin/abandoned', require('./routes/api/admin/abandoned'));
 
 // 6. Health check
 app.get('/api/health', (req, res) => {
