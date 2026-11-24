@@ -631,6 +631,7 @@
         </div></div>
       </div><div style="display:grid;gap:16px;align-content:start">
         <div class="card card-pad"><div class="card-head"><h3>Payments</h3></div>
+          ${val('payment', 'thawani_mode') === 'live' && (!val('payment', 'thawani_public_key') || val('payment', 'thawani_public_key') === 'HGvTMLDssJghr9tlN9gr4DVYt0qyBy') ? '<div class="banner bad" style="margin-bottom:12px"><div><b>Card payment is hidden from customers</b>Live mode is on, but the keys below are Thawani <b>test</b> keys. Paste your <b>live</b> publishable and secret keys from Thawani and save — card payment then appears at checkout.</div></div>' : ''}
           <div class="toggle-row" style="padding-top:0"><div><b>Cash on delivery</b></div><label class="switch"><input type="checkbox" data-bool="cod_active" ${val('payment', 'cod_active') !== 'false' ? 'checked' : ''}><i></i></label></div>
           <div class="toggle-row"><div><b>Thawani Pay</b><span>Cards via Thawani</span></div><label class="switch"><input type="checkbox" data-bool="thawani_active" ${val('payment', 'thawani_active') !== 'false' ? 'checked' : ''}><i></i></label></div>
           <div class="toggle-row"><div><b>Thawani live mode</b><span>Off = sandbox (test cards, no real money)</span></div><label class="switch"><input type="checkbox" id="thLive" ${val('payment', 'thawani_mode') === 'live' ? 'checked' : ''}><i></i></label></div>

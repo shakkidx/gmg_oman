@@ -20,6 +20,12 @@ class ThawaniService {
   /**
    * Retrieve Thawani configuration from settings
    */
+  /** Live mode is usable only with real live keys (not Thawani's published test keys, not empty). */
+  static liveReady(map) {
+    const pub = String(map.thawani_public_key || ''), sec = String(map.thawani_secret_key || '');
+    return Boolean(pub && sec && pub !== ThawaniService.UAT_PUBLIC_KEY && sec !== ThawaniService.UAT_SECRET_KEY);
+  }
+
   static getConfig() {
     const db = getDatabase();
     const rows = db.prepare("SELECT key, value FROM settings WHERE category = 'payment'").all();

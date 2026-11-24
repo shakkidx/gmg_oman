@@ -73,7 +73,8 @@ router.get('/config', (req, res) => {
             description_ar: 'دفع إلكتروني فوري وآمن معتمد من البنك المركزي العماني بواسطة بطاقات فيزا وماستركارد.',
             // Sandbox Thawani is a test page where real cards cannot pay, so customers only see it in live mode.
             // Add ?thawani_test=1 to the checkout URL to test the sandbox.
-            is_active: settings.thawani_active !== 'false' && ((settings.thawani_mode || 'sandbox') === 'live' || req.query.thawani_test === '1'),
+            // Live mode with test keys (or no keys) cannot take real payments, so customers don't see it.
+            is_active: settings.thawani_active !== 'false' && (((settings.thawani_mode || 'sandbox') === 'live' && ThawaniService.liveReady(settings)) || req.query.thawani_test === '1'),
             mode: settings.thawani_mode || 'sandbox'
           }
         ]
@@ -176,7 +177,8 @@ router.post('/order', async (req, res) => {
   }
   const methodKey = paymentMethod === 'cod' ? 'cod_active' : 'thawani_active';
   if (getSetting(methodKey, 'true') === 'false' ||
-      (paymentMethod === 'thawani' && getSetting('thawani_mode', 'sandbox') !== 'live' && !thawaniTest)) {
+      (paymentMethod === 'thawani' && !thawaniTest && (getSetting('thawani_mode', 'sandbox') !== 'live' ||
+        !ThawaniService.liveReady({ thawani_public_key: getSetting('thawani_public_key', ''), thawani_secret_key: getSetting('thawani_secret_key', '') })))) {
     return res.status(400).json({ success: false, error: ar ? 'طريقة الدفع هذه غير متاحة حالياً.' : 'This payment method is currently unavailable.' });
   }
   const gov = findGovernorate(deliveryGovernorate);
