@@ -223,6 +223,15 @@ class OdooService {
 
     const { adapter, mode } = this.getAdapter();
 
+    // Odoo connection off (test/mock mode): don't pretend the order is in Odoo. It stays
+    // "waiting" and is sent for real as soon as the live Odoo connection is turned on.
+    if (mode !== 'live' && process.env.ODOO_MOCK_SYNC !== '1') {
+      const noted = db.prepare("SELECT id FROM order_events WHERE order_id = ? AND event_type = 'odoo_waiting'").get(orderId);
+      if (!noted) db.prepare(`INSERT INTO order_events (id, order_id, event_type, description, created_by) VALUES (?, ?, 'odoo_waiting', ?, 'odoo_service')`)
+        .run(require('uuid').v4(), orderId, 'Odoo connection is off (test mode) — this order will be sent to Odoo when the live connection is turned on.');
+      return { success: false, skipped: true, message: 'Odoo connection is off (test mode). The order will be sent when Odoo is connected.' };
+    }
+
     try {
       const odooPayload = {
         orderNumber: order.order_number,

@@ -131,6 +131,7 @@ function apply20261101d(db) {
 
 function applyCatalogUpdates(db) {
   apply20261124NationalDayOffer(db);
+  apply20261125ResetMockOdooOrders(db);
   // 2026-11-22 — the original seed had made-up sandbox keys; replace them with Thawani's real UAT test keys.
   db.prepare("UPDATE settings SET value = 'HGvTMLDssJghr9tlN9gr4DVYt0qyBy' WHERE key = 'thawani_public_key' AND value = 'hgViMusdnkgKc8ymxServiceKeyUAT'").run();
   db.prepare("UPDATE settings SET value = 'rRQ26GcsZzoEhbrP2HZvLYDbn9C9et' WHERE key = 'thawani_secret_key' AND value = 'rRQ27ugXZTGvposProcessSecretKeyUAT'").run();
@@ -213,6 +214,22 @@ function apply20261101(db) {
  * 20 Nov 2026 00:00 – 30 Nov 2026 23:59 Oman time. Offer prices include VAT ("VAT on us").
  * Also: free delivery all over Oman (free-delivery threshold 0).
  */
+// Orders "synced" while Odoo was in mock/test mode got fake sale-order numbers (SO/OMR/2026/10xx).
+// They never reached the real Odoo, so mark them as waiting again: they are sent once Odoo is live.
+function apply20261125ResetMockOdooOrders(db) {
+  const key = 'reset_mock_odoo_orders_20261125';
+  if (isDone(db, key)) return;
+  const mode = (db.prepare("SELECT value FROM settings WHERE key = 'odoo_mode'").get() || {}).value || 'mock';
+  if (mode === 'live') return markDone(db, key, 'Odoo already live — nothing reset');
+  const rows = db.prepare("SELECT id, odoo_sale_order_name FROM orders WHERE odoo_sale_order_id BETWEEN 5000 AND 9999 AND odoo_sale_order_name LIKE 'SO/OMR/%'").all()
+    .filter(r => /^SO\/OMR\/\d{4}\/(\d+|MOCK)$/.test(r.odoo_sale_order_name));
+  const up = db.prepare("UPDATE orders SET odoo_order_status = 'pending_integration', odoo_sale_order_id = NULL, odoo_sale_order_name = NULL, odoo_retry_count = 0, odoo_last_error = NULL WHERE id = ?");
+  const ev = db.prepare("DELETE FROM order_events WHERE order_id = ? AND event_type = 'odoo_synced'");
+  rows.forEach(r => { up.run(r.id); ev.run(r.id); });
+  markDone(db, key, `${rows.length} test-mode Odoo numbers cleared`);
+  if (rows.length) console.log(`Catalogue update 2026-11-25: ${rows.length} orders marked as not yet in Odoo (were synced in test mode).`);
+}
+
 function apply20261124NationalDayOffer(db) {
   const key = 'offer_national_day_2026';
   if (isDone(db, key)) return;
