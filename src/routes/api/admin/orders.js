@@ -242,7 +242,10 @@ router.delete('/:id', requireAdmin, (req, res) => {
     const o = db.prepare('SELECT * FROM orders WHERE id = ? OR order_number = ?').get(req.params.id, req.params.id);
     if (!o) return res.status(404).json({ success: false, error: 'Order not found.' });
     if (o.odoo_sale_order_id || o.odoo_sale_order_name) return res.status(400).json({ success: false, error: `This order is in Odoo (${o.odoo_sale_order_name || o.odoo_sale_order_id}). Cancel it instead.` });
-    if (o.payment_status === 'paid') return res.status(400).json({ success: false, error: 'This order was paid. Cancel or refund it instead of deleting.' });
+    // A paid order can only be deleted once it is cancelled (e.g. a test payment), and only with explicit confirmation.
+    if (o.payment_status === 'paid' && !(o.fulfillment_status === 'cancelled' && req.query.confirmPaid === '1')) {
+      return res.status(400).json({ success: false, error: o.fulfillment_status === 'cancelled' ? 'This order was paid. Confirm deleting a paid order.' : 'This order was paid. Cancel or refund it instead of deleting.', needsPaidConfirm: o.fulfillment_status === 'cancelled' });
+    }
     if (!['cancelled', 'refunded'].includes(o.fulfillment_status)) restockOrder(o.id, `order ${o.order_number} deleted`, req.adminUser.username);
     runTransaction(() => {
       db.prepare('DELETE FROM order_events WHERE order_id = ?').run(o.id);

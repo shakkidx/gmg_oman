@@ -296,7 +296,7 @@
         <ul class="timeline">${o.events.slice().reverse().map(ev => `<li>${esc(ev.description)}<small>${when(ev.created_at)} · ${esc(ev.created_by)}</small></li>`).join('')}</ul>
         ${o.odoo_sale_order_name ? `<p style="font-size:13px;color:var(--muted);margin:6px 0 0">Odoo sales order: <b class="mono">${esc(o.odoo_sale_order_name)}</b></p>` : ''}
       </div>`;
-    const canDelete = !o.odoo_sale_order_id && !o.odoo_sale_order_name && o.payment_status !== 'paid';
+    const canDelete = !o.odoo_sale_order_id && !o.odoo_sale_order_name && (o.payment_status !== 'paid' || cancelled);
     const foot = cancelled ? (canDelete ? `<button class="btn btn-danger" id="oDelete">${I.trash} Delete order</button>` : '') : `${canDelete ? `<button class="btn btn-ghost" id="oDelete" title="Delete order">${I.trash}</button>` : ''}<button class="btn btn-danger" data-set="cancelled">Cancel order</button><span class="spacer"></span>${o.fulfillment_status !== 'delivered' ? `<select class="btn btn-ghost" id="oManual" aria-label="Set status" style="padding-right:12px"><option value="">Set status…</option>${['confirmed', 'processing', 'shipped', 'delivered'].map(s => `<option value="${s}">${STATUS[s][0]}</option>`).join('')}</select>` : ''}${o.payment_method === 'cod' && o.payment_status !== 'paid' ? `<button class="btn btn-ghost" data-pay="paid">Cash received</button>` : ''}`;
     openSheet(esc(o.order_number), body, foot);
 
@@ -309,7 +309,7 @@
     $$('[data-pay]', sheet).forEach(b => b.onclick = () => update({ paymentStatus: b.dataset.pay }, b));
     const man = $('#oManual'); if (man) man.onchange = () => man.value && update({ fulfillmentStatus: man.value });
     const del = $('#oDelete');
-    if (del) del.onclick = () => confirm(`Delete order ${o.order_number} permanently? This cannot be undone.${cancelled ? '' : ' Its items go back into website stock.'}`) && busy(del, async () => { await api(`/api/admin/orders/${o.id}`, { method: 'DELETE' }); toast(`Order ${o.order_number} deleted`); closeSheet(); onChange && onChange(); }).catch(e => toast(e.message, 'error'));
+    if (del) del.onclick = () => confirm(`Delete order ${o.order_number} permanently? This cannot be undone.${o.payment_status === 'paid' ? ' It was PAID — any refund must be done in Thawani.' : ''}${cancelled ? '' : ' Its items go back into website stock.'}`) && busy(del, async () => { await api(`/api/admin/orders/${o.id}${o.payment_status === 'paid' ? '?confirmPaid=1' : ''}`, { method: 'DELETE' }); toast(`Order ${o.order_number} deleted`); closeSheet(); onChange && onChange(); }).catch(e => toast(e.message, 'error'));
     const retry = $('#oRetry'); if (retry) retry.onclick = () => busy(retry, async () => { const r = await api(`/api/admin/orders/${o.id}/sync-odoo`, { method: 'POST' }); toast(r.message, r.success ? '' : 'error'); openOrder(o.id, onChange); }).catch(e => toast(e.message, 'error'));
   }
 
