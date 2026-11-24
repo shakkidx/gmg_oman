@@ -555,14 +555,36 @@
   // =====================================================================
   // ODOO
   // =====================================================================
+  async function loadProductLinks() {
+    const box = $('#plList'); box.innerHTML = '<div class="skel" style="height:120px"></div>';
+    let r;
+    try { r = await api('/api/admin/odoo/products'); } catch (e) { box.innerHTML = `<div class="banner bad"><div><b>Could not load Odoo products</b>${esc(e.message)}</div></div>`; return; }
+    const opts = sel => `<option value="">— not linked —</option>` + r.odoo.map(o => `<option value="${o.id}" ${String(o.id) === String(sel) ? 'selected' : ''}>${esc(o.name)}${o.ref ? ' [' + esc(o.ref) + ']' : ''} · stock ${o.qty}</option>`).join('');
+    const TAG = { linked: ['Linked', 'ok'], sku: ['Same code', 'ok'], suggested: ['Suggested — check', 'warn'], none: ['Not found', 'bad'] };
+    box.innerHTML = `<div class="list">${r.data.map(p => `<div class="row" style="flex-wrap:wrap;align-items:center">
+        <div class="grow" style="min-width:200px"><div class="title">${esc(p.name_en)}${p.is_published ? '' : ' <span class="pill">Hidden</span>'}</div><div class="meta mono">${esc(p.sku)}</div></div>
+        <div class="end" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-inline-start:auto">${pill(TAG, p.match)}<select data-link="${esc(p.id)}" style="max-width:340px;height:38px;border-radius:10px;border:1px solid var(--line);padding:0 8px">${opts(p.linked_id || p.suggested_id)}</select></div>
+      </div>`).join('')}</div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn btn-primary" id="plSave" data-busy="Saving">Save links</button></div>`;
+    $('#plSave').onclick = e => busy(e.currentTarget, async () => {
+      const links = {}; $$('[data-link]', box).forEach(s => { links[s.dataset.link] = s.value || null; });
+      const res = await api('/api/admin/odoo/links', { method: 'PUT', body: { links } });
+      toast(`Saved ${res.updated} product links`); loadProductLinks();
+    }).catch(err => toast(err.message, 'error'));
+  }
+
+  document.addEventListener('click', e => { if (e.target.closest('#plLoad')) loadProductLinks(); });
   async function viewOdoo(v) {
     v.innerHTML = `<div class="view-head"><div><h2>Odoo sync</h2><p>Stock comes from Odoo; website orders are created in Odoo as sales orders.</p></div></div>
       <div class="dash-grid"><div style="display:grid;gap:16px;align-content:start">
         <div class="card card-pad" id="odooStatus"><div class="skel" style="height:90px"></div></div>
         <div class="card card-pad"><div class="card-head"><h3>Connection</h3></div><div id="odooForm"><div class="skel" style="height:200px"></div></div></div>
-      </div><div style="display:grid;gap:16px;align-content:start">
+      </div>
+      <div class="card card-pad" style="grid-column:1/-1"><div class="card-head"><h3>Product links</h3><button class="btn btn-sm btn-ghost" id="plLoad">Load Odoo products</button></div>
+        <p style="font-size:13.5px;color:var(--muted);margin:0 0 10px">Connect each website product to its product in Odoo. Orders and stock use this link. Nothing is changed in Odoo.</p>
+        <div id="plList"></div></div><div style="display:grid;gap:16px;align-content:start">
         <div class="card card-pad"><div class="card-head"><h3>How it works</h3></div><ol style="margin:0;padding-left:18px;font-size:13.5px;color:var(--ink-2);display:grid;gap:8px">
-          <li>Each website product's <b>SKU</b> must match the product's <b>Internal Reference</b> in Odoo.</li>
+          <li>Each website product is matched to Odoo by its <b>link</b> below, or by <b>SKU = Internal Reference</b>.</li>
           <li>Stock is read from your retail warehouse (on hand minus reserved) every few minutes. Customers never see the number — they just can’t order more than you have.</li>
           <li>Cash-on-delivery orders go to Odoo immediately. Thawani orders go to Odoo once the payment is confirmed.</li>
           <li>If Odoo is offline, orders are kept and retried automatically every 5 minutes.</li></ol></div>

@@ -162,14 +162,29 @@ class Odoo19RpcAdapter extends OdooAdapterInterface {
   /**
    * Synchronize stock levels from Odoo Retail Warehouse
    */
-  async syncStockLevels(skus = []) {
+  /** Odoo products that can be sold (read only) — used to link website products to Odoo products. */
+  async listProducts() {
+    await this.authenticate();
+    return this.executeKw('product.product', 'search_read', [[['active', '=', true], ['sale_ok', '=', true]]], {
+      fields: ['id', 'name', 'default_code', 'barcode', 'qty_available', 'free_qty', 'list_price'],
+      context: { warehouse: this.retailWarehouseId, allowed_company_ids: [this.retailCompanyId] },
+      limit: 2000, order: 'name'
+    });
+  }
+
+  async syncStockLevels(skus = [], ids = []) {
     await this.authenticate();
 
     const domain = [
       ['active', '=', true]
     ];
 
-    if (skus && skus.length > 0) {
+    // Products linked by Odoo ID, plus products whose Internal Reference equals the website SKU
+    if (ids && ids.length > 0 && skus && skus.length > 0) {
+      domain.push('|', ['id', 'in', ids], ['default_code', 'in', skus]);
+    } else if (ids && ids.length > 0) {
+      domain.push(['id', 'in', ids]);
+    } else if (skus && skus.length > 0) {
       domain.push(['default_code', 'in', skus]);
     }
 
@@ -179,19 +194,18 @@ class Odoo19RpcAdapter extends OdooAdapterInterface {
       context: { warehouse: this.retailWarehouseId }
     });
 
-    const stockMap = {};
+    const stockMap = {}, idStock = {};
     for (const p of products) {
-      if (p.default_code) {
-        // free_qty = on hand minus stock already reserved for other orders in this warehouse
-        const qty = (typeof p.free_qty === 'number') ? p.free_qty : (p.qty_available || 0);
-        stockMap[p.default_code] = Math.max(0, Math.floor(qty));
-      }
+      // free_qty = on hand minus stock already reserved for other orders in this warehouse
+      const qty = Math.max(0, Math.floor((typeof p.free_qty === 'number') ? p.free_qty : (p.qty_available || 0)));
+      idStock[p.id] = qty;
+      if (p.default_code) stockMap[p.default_code] = qty;
     }
 
     return {
       success: true,
       updated: Object.keys(stockMap).length,
-      stockMap,
+      stockMap, idStock,
       syncedAt: new Date().toISOString()
     };
   }
@@ -264,23 +278,23 @@ class Odoo19RpcAdapter extends OdooAdapterInterface {
       }]);
     }
 
-    // 3. Resolve Product IDs in Odoo by SKU
-    const skus = items.map(it => it.sku);
-    const odooProducts = await this.executeKw('product.product', 'search_read', [
-      [['default_code', 'in', skus]]
-    ], { fields: ['id', 'default_code', 'name'] });
-
+    // 3. Resolve Odoo products: the product linked in admin (odoo_product_id) first, else Internal Reference = SKU
     const skuToProductId = new Map();
-    odooProducts.forEach(op => {
-      skuToProductId.set(op.default_code, op.id);
-    });
+    items.forEach(it => { if (it.odoo_product_id) skuToProductId.set(it.sku, Number(it.odoo_product_id)); });
+    const skus = items.filter(it => !skuToProductId.has(it.sku)).map(it => it.sku);
+    if (skus.length) {
+      const odooProducts = await this.executeKw('product.product', 'search_read', [
+        [['default_code', 'in', skus]]
+      ], { fields: ['id', 'default_code', 'name'] });
+      odooProducts.forEach(op => { skuToProductId.set(op.default_code, op.id); });
+    }
 
     // 4. Build Sales Order Lines
     const orderLines = [];
     for (const item of items) {
       const odooProdId = skuToProductId.get(item.sku);
       if (!odooProdId) {
-        throw new Error(`SKU '${item.sku}' could not be resolved in Odoo product catalogue.`);
+        throw new Error(`Product '${item.name_en}' (SKU ${item.sku}) is not linked to an Odoo product. Link it in Admin → Odoo sync → Product links.`);
       }
 
       orderLines.push([0, 0, {

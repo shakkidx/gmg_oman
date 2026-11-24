@@ -141,11 +141,16 @@ class OdooService {
     const db = getDatabase();
 
     // Fetch active product SKUs from local DB
-    const localProducts = db.prepare('SELECT sku FROM products WHERE is_published = 1').all();
-    const skus = localProducts.map(p => p.sku);
+    const localProducts = db.prepare('SELECT id, sku, odoo_product_id FROM products WHERE is_published = 1').all();
+    const skus = localProducts.filter(p => !p.odoo_product_id).map(p => p.sku);
+    const ids = localProducts.filter(p => p.odoo_product_id).map(p => Number(p.odoo_product_id));
 
     try {
-      const syncResult = await adapter.syncStockLevels(skus);
+      const syncResult = await adapter.syncStockLevels(skus, ids);
+      // Linked products: take the stock of their Odoo product (by ID) under the website SKU
+      const linkedMap = {};
+      if (syncResult.idStock) localProducts.filter(p => p.odoo_product_id && syncResult.idStock[p.odoo_product_id] !== undefined).forEach(p => { linkedMap[p.sku] = syncResult.idStock[p.odoo_product_id]; });
+      syncResult.stockMap = { ...(syncResult.stockMap || {}), ...linkedMap };
       let updatedCount = 0;
 
       const updateStmt = db.prepare(`
@@ -215,8 +220,10 @@ class OdooService {
     // Offer lines are labelled for reporting (e.g. "[National Day Offer 2026]"). Offer prices include VAT,
     // so Odoo gets the price before VAT and adds its own 5% tax on top.
     const vatRate = parseFloat((db.prepare("SELECT value FROM settings WHERE key = 'vat_rate'").get() || {}).value || '0.05');
+    const linkOf = db.prepare('SELECT odoo_product_id FROM products WHERE id = ?');
     const items = rawItems.map(it => ({
       ...it,
+      odoo_product_id: (linkOf.get(it.product_id) || {}).odoo_product_id || null,
       name_en: it.offer_name ? `${it.name_en} [${it.offer_name}]` : it.name_en,
       unit_price_baisa: it.vat_included ? Math.round(it.unit_price_baisa / (1 + vatRate)) : it.unit_price_baisa
     }));
