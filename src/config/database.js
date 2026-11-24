@@ -62,6 +62,14 @@ function initializeDatabase() {
   };
   addColumn('products', 'hero_tagline', 'TEXT'); // optional headline for the homepage banner
   addColumn('products', 'hero_tagline_ar', 'TEXT'); // Arabic version of the banner headline
+  // Offer pricing recorded on each order line (for reporting and Odoo)
+  addColumn('order_items', 'offer_id', 'TEXT');
+  addColumn('order_items', 'offer_name', 'TEXT');
+  addColumn('order_items', 'original_price_baisa', 'INTEGER');
+  addColumn('order_items', 'vat_included', 'INTEGER DEFAULT 0');
+  // Meta Conversions API: Purchase sent once per order
+  addColumn('orders', 'capi_purchase_sent', 'INTEGER DEFAULT 0');
+  addColumn('orders', 'tracking_json', 'TEXT');
   return db;
 }
 

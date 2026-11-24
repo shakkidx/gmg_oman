@@ -220,3 +220,43 @@ CREATE TABLE IF NOT EXISTS integration_events (
 CREATE INDEX IF NOT EXISTS idx_integration_service ON integration_events(service);
 CREATE INDEX IF NOT EXISTS idx_integration_reference ON integration_events(reference_id);
 CREATE INDEX IF NOT EXISTS idx_integration_status ON integration_events(status);
+
+-- Time-limited offers (e.g. National Day). Offer prices apply only to the listed products,
+-- only between starts_at and ends_at (UTC ISO strings), and are always calculated on the server.
+CREATE TABLE IF NOT EXISTS offers (
+  id TEXT PRIMARY KEY,
+  name_en TEXT NOT NULL,
+  name_ar TEXT,
+  starts_at TEXT NOT NULL,
+  ends_at TEXT NOT NULL,
+  vat_included INTEGER NOT NULL DEFAULT 1, -- 1 = offer price already includes VAT
+  is_active INTEGER NOT NULL DEFAULT 1,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS offer_items (
+  id TEXT PRIMARY KEY,
+  offer_id TEXT NOT NULL REFERENCES offers(id) ON DELETE CASCADE,
+  product_id TEXT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  offer_price_baisa INTEGER NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  UNIQUE (offer_id, product_id)
+);
+
+-- Checkouts where the customer typed a phone number but did not finish the order.
+CREATE TABLE IF NOT EXISTS abandoned_checkouts (
+  id TEXT PRIMARY KEY,               -- random id kept in the customer's browser
+  customer_name TEXT,
+  customer_phone TEXT NOT NULL,
+  governorate TEXT,
+  items_json TEXT NOT NULL,
+  total_baisa INTEGER NOT NULL DEFAULT 0,
+  lang TEXT,
+  source TEXT,
+  status TEXT NOT NULL DEFAULT 'open', -- open | contacted | converted
+  order_number TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_abandoned_updated ON abandoned_checkouts(updated_at);

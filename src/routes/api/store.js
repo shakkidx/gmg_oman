@@ -5,6 +5,7 @@ const express = require('express');
 const router = express.Router();
 const { getSettingsMap } = require('../../services/inventoryService');
 const PricingService = require('../../services/pricingService');
+const OfferService = require('../../services/offerService');
 
 router.get('/', (req, res) => {
   try {
@@ -27,6 +28,7 @@ router.get('/', (req, res) => {
         currency: 'OMR',
         free_shipping_threshold_baisa: freeThreshold,
         free_shipping_threshold_formatted: PricingService.formatOmr(freeThreshold, ar ? 'ar' : 'en'),
+        offer: (() => { const f = OfferService.featuredOffer(); return f && f.state !== 'ended' ? { state: f.state, name: ar ? f.offer.name_ar : f.offer.name_en, starts_at: f.offer.starts_at, ends_at: f.offer.ends_at } : null; })(),
         payment: { cod: s.cod_active !== 'false', thawani: s.thawani_active !== 'false' }
       }
     });

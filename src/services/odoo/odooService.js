@@ -211,7 +211,15 @@ class OdooService {
       throw new Error(`Order ID ${orderId} not found.`);
     }
 
-    const items = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(orderId);
+    const rawItems = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(orderId);
+    // Offer lines are labelled for reporting (e.g. "[National Day Offer 2026]"). Offer prices include VAT,
+    // so Odoo gets the price before VAT and adds its own 5% tax on top.
+    const vatRate = parseFloat((db.prepare("SELECT value FROM settings WHERE key = 'vat_rate'").get() || {}).value || '0.05');
+    const items = rawItems.map(it => ({
+      ...it,
+      name_en: it.offer_name ? `${it.name_en} [${it.offer_name}]` : it.name_en,
+      unit_price_baisa: it.vat_included ? Math.round(it.unit_price_baisa / (1 + vatRate)) : it.unit_price_baisa
+    }));
 
     const { adapter, mode } = this.getAdapter();
 
@@ -227,6 +235,7 @@ class OdooService {
         items,
         totalBaisa: order.total_baisa,
         paymentMethod: order.payment_method,
+        paymentStatus: order.payment_status,
         idempotencyKey: order.idempotency_key
       };
 

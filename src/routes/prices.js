@@ -5,6 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const { getDatabase } = require('../config/database');
+const OfferService = require('../services/offerService');
 
 const TEMPLATE = path.resolve(__dirname, '../../public/contact.html');
 
@@ -19,7 +20,7 @@ function render() {
     .forEach(r => { settings[r.key] = r.value; });
 
   const rows = db.prepare(`
-    SELECT p.id, p.sku, p.slug, p.name_en, p.name_ar, p.retail_price_baisa, p.sale_price_baisa, p.stock_quantity,
+    SELECT p.*, p.id, p.sku, p.slug, p.name_en, p.name_ar, p.retail_price_baisa, p.sale_price_baisa, p.stock_quantity,
            c.name_en AS cat_en, c.name_ar AS cat_ar, c.sort_order AS cat_sort,
            (SELECT image_url FROM product_images i WHERE i.product_id = p.id ORDER BY i.is_primary DESC, i.sort_order ASC LIMIT 1) AS image
     FROM products p JOIN categories c ON c.id = p.category_id
@@ -27,6 +28,7 @@ function render() {
     ORDER BY c.sort_order, c.name_en, COALESCE(p.sale_price_baisa, p.retail_price_baisa)
   `).all();
 
+  const offerMap = OfferService.activeOfferMap();
   const groups = [];
   rows.forEach(r => {
     let g = groups.find(x => x.name === r.cat_en);
@@ -38,7 +40,8 @@ function render() {
   const vatPct = Math.round(parseFloat(settings.vat_rate || '0.05') * 100);
   const note = [
     `All prices are in Omani Rial (OMR) ${vatIncl ? `and include ${vatPct}% VAT` : `and exclude ${vatPct}% VAT, which is added at checkout`}.`,
-    `Delivery: Muscat ${omr(settings.muscat_delivery_fee_baisa || 1500)}, other governorates ${omr(settings.other_delivery_fee_baisa || 2500)}, free on orders over ${omr(settings.free_shipping_threshold_baisa || 25000)}.`,
+    parseInt(settings.free_shipping_threshold_baisa || '25000', 10) <= 0 ? 'Free delivery all over Oman.' : `Delivery: Muscat ${omr(settings.muscat_delivery_fee_baisa || 1500)}, other governorates ${omr(settings.other_delivery_fee_baisa || 2500)}, free on orders over ${omr(settings.free_shipping_threshold_baisa || 25000)}.`,
+    'Offer prices (marked) include VAT and are valid only during the offer period.',
     'Pay by card with Thawani Pay or cash on delivery.'
   ];
 
@@ -48,12 +51,13 @@ function render() {
       <div class="pl-table" role="table" aria-label="${esc(g.name)} prices">
         <div class="pl-row pl-head" role="row"><span role="columnheader">Product</span><span role="columnheader">SKU</span><span role="columnheader">Price</span></div>
         ${g.items.map(p => {
-          const onSale = p.sale_price_baisa && p.sale_price_baisa < p.retail_price_baisa;
-          const price = onSale ? p.sale_price_baisa : p.retail_price_baisa;
+          const pr = OfferService.priceFor(p, offerMap);
+          const onSale = pr.original > pr.unit;
+          const price = pr.unit;
           return `<a class="pl-row" role="row" href="/product/${esc(p.slug)}">
             <span class="pl-prod" role="cell"><img src="${esc(thumb(p.image))}" alt="" loading="lazy" width="56" height="56"><span><b>${esc(p.name_en)}</b><small dir="rtl">${esc(p.name_ar || '')}</small></span></span>
             <span class="pl-sku" role="cell">${esc(p.sku)}</span>
-            <span class="pl-price" role="cell"><b>${omr(price)}</b>${onSale ? `<s>${omr(p.retail_price_baisa)}</s>` : ''}${p.stock_quantity > 0 ? '' : '<em>Sold out</em>'}</span>
+            <span class="pl-price" role="cell"><b>${omr(price)}</b>${onSale ? `<s>${omr(pr.original)}</s>` : ''}${pr.offer ? `<em style="color:#8a4b00">${esc(pr.offer.name_en)} · VAT incl.</em>` : ''}${p.stock_quantity > 0 ? '' : '<em>Sold out</em>'}</span>
           </a>`;
         }).join('')}
       </div>

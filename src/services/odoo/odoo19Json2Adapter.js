@@ -257,7 +257,7 @@ class Odoo19Json2Adapter extends OdooAdapterInterface {
         warehouse_id: this.retailWarehouseId,
         client_order_ref: orderNumber,
         origin: `Website Checkout #${orderNumber}`,
-        note: `Payment: ${paymentMethod === 'cod' ? 'Cash on Delivery (COD)' : 'Thawani Online Gateway'} | Delivery: ${deliveryGovernorate}, ${deliveryCity}`,
+        note: `Payment: ${paymentMethod === 'cod' ? 'Cash on Delivery (COD)' : 'Thawani Online Gateway (PAID)'} | Delivery: ${deliveryGovernorate}, ${deliveryCity}`,
         order_line: orderLines
       }]
     };

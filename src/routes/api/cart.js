@@ -1,99 +1,43 @@
-// Real-Time Cart Stock & Pricing Validation
+// Cart validation: live stock and server-side prices (offer prices included)
 
 const express = require('express');
 const router = express.Router();
-const { getDatabase } = require('../../config/database');
 const PricingService = require('../../services/pricingService');
-const { maxOrderQty } = require('../../services/inventoryService');
+const { priceCart } = require('../../services/cartPricing');
 
 /**
  * POST /api/cart/validate
- * Validates array of items [{ sku, quantity }] against live stock and prices
+ * Body: { items: [{ sku, quantity, price_baisa? }], lang, governorate? }
+ * Returns every line with the price the server will charge, and the cart totals.
  */
 router.post('/validate', (req, res) => {
   try {
-    const { items = [], lang = 'en' } = req.body;
-    if (!Array.isArray(items) || items.length === 0) {
-      return res.json({
-        success: true,
-        valid: true,
-        items: [],
-        subtotal_baisa: 0,
-        subtotal_formatted: PricingService.formatOmr(0, lang)
-      });
-    }
-
-    const db = getDatabase();
-    const validatedItems = [];
-    let hasIssues = false;
-    let subtotalBaisa = 0;
-
-    for (const item of items) {
-      const requestedQty = Math.max(1, parseInt(item.quantity || 1, 10));
-      
-      // Query product and optional variant
-      const product = db.prepare(`
-        SELECT 
-          p.id, p.sku, p.slug, p.name_en, p.name_ar, p.retail_price_baisa, p.sale_price_baisa,
-          p.stock_quantity, p.is_published,
-          (SELECT image_url FROM product_images WHERE product_id = p.id ORDER BY is_primary DESC LIMIT 1) as image_url
-        FROM products p
-        WHERE p.sku = ?
-      `).get(item.sku);
-
-      if (!product || !product.is_published) {
-        hasIssues = true;
-        validatedItems.push({
-          sku: item.sku,
-          valid: false,
-          error: 'PRODUCT_UNAVAILABLE',
-          message: lang === 'ar' ? 'المنتج غير متوفر حالياً' : 'Product is no longer available.'
-        });
-        continue;
-      }
-
-      // Check stock (the exact stock number is never sent to the browser)
-      const maxQty = maxOrderQty(product.stock_quantity);
-      const isAvailable = maxQty >= requestedQty;
-      const effectiveQty = isAvailable ? requestedQty : maxQty;
-
-      if (!isAvailable) {
-        hasIssues = true;
-      }
-
-      const unitPriceBaisa = product.sale_price_baisa && product.sale_price_baisa < product.retail_price_baisa
-        ? product.sale_price_baisa
-        : product.retail_price_baisa;
-
-      const lineTotalBaisa = unitPriceBaisa * effectiveQty;
-      subtotalBaisa += lineTotalBaisa;
-
-      validatedItems.push({
-        id: product.id,
-        sku: product.sku,
-        name: (lang === 'ar' && product.name_ar) || product.name_en,
-        name_en: product.name_en,
-        name_ar: product.name_ar,
-        image_url: product.image_url,
-        unit_price_baisa: unitPriceBaisa,
-        unit_price_formatted: PricingService.formatOmr(unitPriceBaisa, lang),
-        requested_quantity: requestedQty,
-        max_qty: maxQty,
-        allocated_quantity: effectiveQty,
-        line_total_baisa: lineTotalBaisa,
-        line_total_formatted: PricingService.formatOmr(lineTotalBaisa, lang),
-        slug: product.slug,
-        is_in_stock: maxQty > 0,
-        has_sufficient_stock: isAvailable
-      });
-    }
-
+    const { items = [], lang = 'en', governorate } = req.body || {};
+    const r = priceCart(items, { lang, governorate });
+    const f = b => PricingService.formatOmr(b, lang);
+    const out = r.lines.map(l => ({
+      id: l.product_id, sku: l.sku, slug: l.slug, valid: true, is_in_stock: true,
+      name: l.name, name_en: l.name_en, name_ar: l.name_ar, image_url: l.image_url,
+      unit_price_baisa: l.unit_price_baisa, unit_price_formatted: f(l.unit_price_baisa),
+      original_price_baisa: l.original_price_baisa,
+      offer: l.offer ? { id: l.offer.id, name: lang === 'ar' ? l.offer.name_ar : l.offer.name_en, ends_at: l.offer.ends_at } : null,
+      max_qty: l.max_qty, requested_quantity: l.quantity, allocated_quantity: l.quantity,
+      has_sufficient_stock: true,
+      line_total_baisa: l.line_total_baisa, line_total_formatted: f(l.line_total_baisa)
+    }));
+    r.issues.forEach(i => {
+      if (i.code === 'QTY_REDUCED') { const o = out.find(x => x.sku === i.sku); if (o) o.has_sufficient_stock = false; return; }
+      out.push({ sku: i.sku, valid: false, is_in_stock: false, error: i.code });
+    });
     res.json({
       success: true,
-      valid: !hasIssues,
-      items: validatedItems,
-      subtotal_baisa: subtotalBaisa,
-      subtotal_formatted: PricingService.formatOmr(subtotalBaisa, lang)
+      valid: r.issues.length === 0,
+      price_changed: r.priceChanged,
+      items: out,
+      subtotal_baisa: r.totals.subtotalBaisa,
+      subtotal_formatted: r.totals.subtotal_formatted,
+      totals: r.totals,
+      free_delivery: r.freeDelivery
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });

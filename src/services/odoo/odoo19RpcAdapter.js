@@ -300,7 +300,7 @@ class Odoo19RpcAdapter extends OdooAdapterInterface {
       client_order_ref: orderNumber,
       origin: `Website Checkout #${orderNumber}`,
       payment_term_id: false,
-      note: `Payment Method: ${paymentMethod === 'cod' ? 'Cash on Delivery (COD)' : 'Thawani Online Gateway'} | Delivery: ${deliveryGovernorate}, ${deliveryCity}`,
+      note: `Payment Method: ${paymentMethod === 'cod' ? 'Cash on Delivery (COD)' : 'Thawani Online Gateway (PAID)'} | Delivery: ${deliveryGovernorate}, ${deliveryCity}`,
       order_line: orderLines
     };
 

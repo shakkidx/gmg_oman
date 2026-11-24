@@ -7,6 +7,7 @@ const router = express.Router();
 const { getDatabase } = require('../../config/database');
 const PricingService = require('../../services/pricingService');
 const { maxOrderQty } = require('../../services/inventoryService');
+const OfferService = require('../../services/offerService');
 
 /**
  * GET /api/products
@@ -103,9 +104,8 @@ router.get('/', (req, res) => {
     const products = db.prepare(query).all(...params, limitNum, offset);
 
     // Format money and stock badge
+    const offerMap = OfferService.activeOfferMap();
     const formattedProducts = products.map(p => {
-      const isSale = p.sale_price_baisa && p.sale_price_baisa < p.retail_price_baisa;
-      const currentPriceBaisa = isSale ? p.sale_price_baisa : p.retail_price_baisa;
 
       return {
         id: p.id,
@@ -124,15 +124,7 @@ router.get('/', (req, res) => {
         },
         primary_image: p.primary_image || '/images/placeholder-product.svg',
         second_image: p.second_image || null,
-        pricing: {
-          current_baisa: currentPriceBaisa,
-          retail_baisa: p.retail_price_baisa,
-          sale_baisa: p.sale_price_baisa,
-          is_on_sale: isSale,
-          current_formatted: PricingService.formatOmr(currentPriceBaisa, lang),
-          retail_formatted: PricingService.formatOmr(p.retail_price_baisa, lang),
-          discount_percentage: isSale ? Math.round(((p.retail_price_baisa - p.sale_price_baisa) / p.retail_price_baisa) * 100) : 0
-        },
+        pricing: OfferService.pricingBlock(p, offerMap, PricingService.formatOmr, lang),
         // Stock numbers stay private: the shop only knows if it can be bought and the cart limit
         available: p.stock_quantity > 0,
         max_qty: maxOrderQty(p.stock_quantity),
@@ -211,8 +203,7 @@ router.get('/:slugOrId', (req, res) => {
       LIMIT 4
     `).all(product.category_id, product.id);
 
-    const isSale = product.sale_price_baisa && product.sale_price_baisa < product.retail_price_baisa;
-    const currentPriceBaisa = isSale ? product.sale_price_baisa : product.retail_price_baisa;
+    const offerMap = OfferService.activeOfferMap();
 
     let specs = {};
     try {
@@ -240,15 +231,7 @@ router.get('/:slugOrId', (req, res) => {
           slug: product.category_slug,
           name: (lang === 'ar' && product.category_name_ar) || product.category_name_en
         },
-        pricing: {
-          current_baisa: currentPriceBaisa,
-          retail_baisa: product.retail_price_baisa,
-          sale_baisa: product.sale_price_baisa,
-          is_on_sale: isSale,
-          current_formatted: PricingService.formatOmr(currentPriceBaisa, lang),
-          retail_formatted: PricingService.formatOmr(product.retail_price_baisa, lang),
-          discount_percentage: isSale ? Math.round(((product.retail_price_baisa - product.sale_price_baisa) / product.retail_price_baisa) * 100) : 0
-        },
+        pricing: OfferService.pricingBlock(product, offerMap, PricingService.formatOmr, lang),
         // Stock numbers stay private: the shop only knows if it can be bought and the cart limit
         available: product.stock_quantity > 0,
         max_qty: maxOrderQty(product.stock_quantity),
@@ -275,9 +258,9 @@ router.get('/:slugOrId', (req, res) => {
           image: r.primary_image,
           available: r.stock_quantity > 0,
           max_qty: maxOrderQty(r.stock_quantity),
-          price_formatted: PricingService.formatOmr(r.sale_price_baisa || r.retail_price_baisa, lang),
-          retail_formatted: PricingService.formatOmr(r.retail_price_baisa, lang),
-          is_on_sale: Boolean(r.sale_price_baisa && r.sale_price_baisa < r.retail_price_baisa)
+          price_formatted: PricingService.formatOmr(OfferService.priceFor(r, offerMap).unit, lang),
+          retail_formatted: PricingService.formatOmr(OfferService.priceFor(r, offerMap).original, lang),
+          is_on_sale: OfferService.priceFor(r, offerMap).unit < OfferService.priceFor(r, offerMap).original
         }))
       }
     });

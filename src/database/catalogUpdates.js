@@ -130,6 +130,7 @@ function apply20261101d(db) {
 }
 
 function applyCatalogUpdates(db) {
+  apply20261124NationalDayOffer(db);
   // 2026-11-22 — the original seed had made-up sandbox keys; replace them with Thawani's real UAT test keys.
   db.prepare("UPDATE settings SET value = 'HGvTMLDssJghr9tlN9gr4DVYt0qyBy' WHERE key = 'thawani_public_key' AND value = 'hgViMusdnkgKc8ymxServiceKeyUAT'").run();
   db.prepare("UPDATE settings SET value = 'rRQ26GcsZzoEhbrP2HZvLYDbn9C9et' WHERE key = 'thawani_secret_key' AND value = 'rRQ27ugXZTGvposProcessSecretKeyUAT'").run();
@@ -205,6 +206,36 @@ function apply20261101(db) {
 
   markDone(db, u.key, 'Client price list of 1 Nov 2026 applied');
   console.log(`Catalogue update 2026-11-01: ${updated} prices updated, ${removed} duplicate listings merged.`);
+}
+
+/**
+ * 2026-11-24 — the National Day retail offer as real server-side prices (Instagram price list),
+ * 20 Nov 2026 00:00 – 30 Nov 2026 23:59 Oman time. Offer prices include VAT ("VAT on us").
+ * Also: free delivery all over Oman (free-delivery threshold 0).
+ */
+function apply20261124NationalDayOffer(db) {
+  const key = 'offer_national_day_2026';
+  if (isDone(db, key)) return;
+  const PRICES = [
+    ['MEV-CH-2016', 4900], ['MEV-CH-2010', 4700], ['MEV-CH-4515', 6300], ['MEV-CH-4509', 5900],
+    ['MEV-CC-5203', 4900], ['MEV-PB-5001', 14900], ['MEV-PB-MAG-08', 12900], ['MEV-PB-MAG-06', 15900],
+    ['MEV-CB-0651', 3900], ['MEV-CB-1004', 4300], ['MEV-CB-3005', 4900]
+  ];
+  const id = 'offer-national-day-2026';
+  if (!db.prepare('SELECT 1 FROM offers WHERE id = ?').get(id)) {
+    db.prepare(`INSERT INTO offers (id, name_en, name_ar, starts_at, ends_at, vat_included, is_active)
+      VALUES (?, 'National Day Offer 2026', 'عرض العيد الوطني 2026', '2026-11-20T00:00:00+04:00', '2026-11-30T23:59:59+04:00', 1, 1)`).run(id);
+    const ins = db.prepare('INSERT OR IGNORE INTO offer_items (id, offer_id, product_id, offer_price_baisa, sort_order) VALUES (?, ?, ?, ?, ?)');
+    PRICES.forEach(([sku, price], i) => {
+      const p = db.prepare('SELECT id FROM products WHERE sku = ?').get(sku);
+      if (p) ins.run(`${id}-${sku}`, id, p.id, price, i);
+    });
+  }
+  db.prepare("UPDATE settings SET value = '0', updated_at = CURRENT_TIMESTAMP WHERE key = 'free_shipping_threshold_baisa'").run();
+  db.prepare("UPDATE settings SET value = ? WHERE key = 'announcement_text' AND value LIKE '%over OMR 25%'").run('Free delivery all over Oman');
+  db.prepare("UPDATE settings SET value = ? WHERE key = 'announcement_text_ar' AND value LIKE '%٢٥%'").run('توصيل مجاني لجميع أنحاء عُمان');
+  markDone(db, key, 'National Day offer 2026 created; free delivery all over Oman');
+  console.log('Catalogue update 2026-11-24: National Day offer + free delivery.');
 }
 
 module.exports = { applyCatalogUpdates };
