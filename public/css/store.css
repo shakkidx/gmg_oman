@@ -746,3 +746,21 @@ html.css-wait body { opacity: 1; }
 .or-line { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12.5px; margin: 12px 0 0; }
 .or-line::before, .or-line::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 .pdp-offer { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; color: #8a4b00; font-weight: 600; margin: 6px 0 4px; }
+
+/* ---------- Lead form ("call me back") ---------- */
+.lead-box { margin-top: 40px; margin-bottom: 40px; }
+.lead-card { display: grid; gap: 18px; background: linear-gradient(135deg, #0b1f4d, #12307a); color: #fff; border-radius: 22px; padding: 24px; }
+@media (min-width: 900px) { .lead-card { grid-template-columns: 1fr 1.3fr; align-items: center; padding: 32px 36px; } }
+.lead-copy h2 { color: #fff; font-size: 22px; margin: 0 0 6px; }
+.lead-copy p { color: rgba(255,255,255,.8); margin: 0; font-size: 14.5px; line-height: 1.5; }
+.lead-form { display: grid; gap: 10px; }
+@media (min-width: 640px) { .lead-form { grid-template-columns: 1fr 1fr; } .lead-form button, .lead-form .lead-msg { grid-column: 1 / -1; } }
+.lead-form input, .lead-form select { width: 100%; height: 48px; border-radius: 12px; border: 0; padding: 0 14px; font: 500 15px var(--text); color: var(--ink); background: #fff; }
+.lead-form .phone-input { display: flex; background: #fff; border-radius: 12px; overflow: hidden; }
+.lead-form .phone-input span { display: grid; place-items: center; padding: 0 12px; color: var(--ink); font-weight: 600; border-inline-end: 1px solid var(--line); }
+.lead-form .phone-input input { border-radius: 0; }
+.lead-form button { height: 50px; background: #25d366; color: #fff; border: 0; font-weight: 700; }
+.lead-form .hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.lead-msg { margin: 0; font-size: 14px; min-height: 0; }
+.lead-msg.ok { background: rgba(37,211,102,.18); border-radius: 12px; padding: 12px 14px; font-weight: 600; }
+.lead-msg.err { color: #ffb4b4; }

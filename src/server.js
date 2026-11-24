@@ -154,6 +154,8 @@ app.use('/api/admin/settings', require('./routes/api/admin/settings'));
 app.use('/api/admin/offers', require('./routes/api/admin/offers'));
 app.use('/api/admin/abandoned', require('./routes/api/admin/abandoned'));
 app.use('/api/admin/push', require('./routes/api/admin/push'));
+app.use('/api/admin/insights', require('./routes/api/admin/insights'));
+app.use('/api/visits', require('./routes/api/visits'));
 
 // 6. Health check
 app.get('/api/health', (req, res) => {

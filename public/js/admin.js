@@ -37,6 +37,7 @@
     phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>',
     out: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h5v16h-5M10 8l-4 4 4 4M6 12h10"/></svg>',
     more: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>',
+    eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
     download: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>'
   };
 
@@ -78,16 +79,18 @@
     { r: '', label: 'Dashboard', icon: I.home },
     { r: 'orders', label: 'Orders', icon: I.orders },
     { r: 'products', label: 'Products', icon: I.box },
+    { r: 'visitors', label: 'Visitors', icon: I.eye },
+    { r: 'leads', label: 'Leads', icon: I.phone },
     { r: 'offers', label: 'Offers', icon: I.star },
-    { r: 'abandoned', label: 'Abandoned carts', icon: I.wa },
+    { r: 'abandoned', label: 'Abandoned', icon: I.wa },
     { r: 'categories', label: 'Categories', icon: I.tag },
     { r: 'odoo', label: 'Odoo sync', icon: I.sync },
     { r: 'settings', label: 'Settings', icon: I.gear }
   ];
-  const TAB = [NAV[0], NAV[1], NAV[2], NAV[4], { r: 'more', label: 'More', icon: I.more }]; // Dashboard, Orders, Products, Abandoned, More
+  const TAB = ['', 'orders', 'leads', 'abandoned'].map(r => NAV.find(n => n.r === r)).concat({ r: 'more', label: 'More', icon: I.more }); // Dashboard, Orders, Products, Abandoned, More
   let toShip = 0;
   function renderNav(route) {
-    const isOn = r => (r === route || (r === 'more' && ['offers', 'categories', 'odoo', 'settings', 'more'].includes(route)));
+    const isOn = r => (r === route || (r === 'more' && ['visitors', 'products', 'offers', 'categories', 'odoo', 'settings', 'more'].includes(route)));
     $('#sideNav').innerHTML = NAV.map(n => `<a href="#/${n.r}" class="${isOn(n.r) ? 'active' : ''}">${n.icon}<span>${n.label}</span>${n.r === 'orders' && toShip ? `<span class="count">${toShip}</span>` : ''}</a>`).join('');
     $('#tabbar').innerHTML = TAB.map(n => `<a href="#/${n.r}" class="${isOn(n.r) ? 'active' : ''}">${n.icon}<span>${n.label}</span>${n.r === 'orders' && toShip ? `<span class="dot">${toShip}</span>` : ''}</a>`).join('');
   }
@@ -126,12 +129,22 @@
           <div class="card card-pad"><div class="card-head"><h3>Orders to pack &amp; ship</h3><a href="#/orders">All orders →</a></div><div class="list" id="shipList"></div></div>
         </div>
         <div style="display:grid;gap:16px;align-content:start">
+          <div class="card card-pad" id="webCard"><div class="card-head"><h3>Website today</h3><a href="#/visitors">Details →</a></div><div class="skel" style="height:40px"></div></div>
           <div class="card card-pad" id="odooCard"></div>
           <div class="card card-pad"><div class="card-head"><h3>Top products</h3></div><div class="list" id="topList"></div></div>
           <div class="card card-pad"><div class="card-head"><h3>Low stock</h3><a href="#/products">Products →</a></div><div class="list" id="lowList"></div></div>
         </div>
       </div>`;
 
+    api('/api/admin/insights/analytics?days=7').then(r => {
+      const a = r.data;
+      $('#webCard').innerHTML = `<div class="card-head"><h3>Website today</h3><a href="#/visitors">Details →</a></div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+          <div><div class="v-num">${a.today.visitors}</div><div class="v-lab">visitors</div></div>
+          <div><div class="v-num">${a.online_now}</div><div class="v-lab">online now</div></div>
+          <div><div class="v-num">${a.period.visitors}</div><div class="v-lab">last 7 days</div></div>
+        </div>`;
+    }).catch(() => { $('#webCard').remove(); });
     if (localStorage.getItem('gmg_admin_mustchange')) {
       $('#pwBanner').innerHTML = `<div class="banner warn"><div><b>Please change the default password</b>Anyone who knows the factory password could sign in.</div><a class="btn btn-sm btn-primary" href="#/settings">Change now</a></div>`;
     }
@@ -168,7 +181,7 @@
     });
   }
 
-  function drawChart(el, data) {
+  function drawChart(el, data, tipFn) {
     const W = 640, H = 200, pad = { l: 44, r: 6, t: 10, b: 24 };
     const max = Math.max(1000, ...data.map(d => d.revenue_baisa));
     const nice = Math.ceil(max / 1000 / 4) * 4 * 1000 || 4000;
@@ -187,7 +200,7 @@
     el.onmousemove = e => {
       const r = e.target.closest('rect'); if (!r) { tip.style.opacity = 0; return; }
       const d = data[+r.dataset.i]; const box = el.getBoundingClientRect(); const rb = r.getBoundingClientRect();
-      tip.innerHTML = `<b>${omr(d.revenue_baisa)}</b> · ${d.orders} order${d.orders === 1 ? '' : 's'}<br>${new Date(d.day + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}`;
+      tip.innerHTML = tipFn ? tipFn(d) : `<b>${omr(d.revenue_baisa)}</b> · ${d.orders} order${d.orders === 1 ? '' : 's'}<br>${new Date(d.day + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}`;
       tip.style.left = (rb.left - box.left + rb.width / 2) + 'px'; tip.style.top = (rb.top - box.top) + 'px'; tip.style.opacity = 1;
     };
     el.onmouseleave = () => { tip.style.opacity = 0; };
@@ -750,9 +763,84 @@
     load();
   }
 
+  // =====================================================================
+  // VISITORS — website visits, sources, pages (no personal data)
+  // =====================================================================
+  async function viewVisitors(v) {
+    let days = 30;
+    const SRC = { direct: 'Direct / typed link', instagram: 'Instagram', facebook: 'Facebook', google: 'Google', whatsapp: 'WhatsApp', tiktok: 'TikTok', snapchat: 'Snapchat', twitter: 'X / Twitter', youtube: 'YouTube', bing: 'Bing' };
+    const PAGE = p => p === '/' ? 'Home' : p.startsWith('/offers') ? 'Offers' + (p.includes('catalogue') ? ' catalogue' : '') : p.startsWith('/product/') ? 'Product · ' + p.slice(9).replace(/-/g, ' ') : p.startsWith('/category/') ? 'Category · ' + p.slice(10) : p.replace(/^\//, '').replace(/\.html$/, '') || p;
+    v.innerHTML = `<div class="view-head"><div><h2>Website visitors</h2><p>Counted on the website without cookies banners or personal data. Your own visits while signed in are not counted.</p></div>
+      <div class="seg" id="vRange"><button data-d="1">Today</button><button data-d="7">7 days</button><button data-d="30" class="on">30 days</button><button data-d="90">90 days</button></div></div>
+      <div class="kpis" id="vKpis"></div>
+      <div class="card card-pad" style="margin-top:16px"><div class="card-head"><h3>Visitors per day</h3></div><div class="chart" id="vChart"></div></div>
+      <div class="dash-grid" style="margin-top:16px">
+        <div class="card card-pad"><div class="card-head"><h3>Where visitors come from</h3></div><div id="vSrc"></div></div>
+        <div class="card card-pad"><div class="card-head"><h3>Top pages</h3></div><div class="list" id="vPages"></div></div>
+      </div>`;
+    const bars = (rows, label, key) => { const max = Math.max(1, ...rows.map(r => r[key])); return rows.map(r => `<div class="vbar"><div class="vbar-top"><span>${esc(label(r))}</span><b>${r[key]}</b></div><div class="vbar-track"><i style="width:${Math.round(r[key] / max * 100)}%"></i></div></div>`).join('') || '<p style="color:var(--muted);font-size:14px">No visits yet.</p>'; };
+    const load = async () => {
+      const a = (await api(`/api/admin/insights/analytics?days=${days}`)).data;
+      const lbl = days === 1 ? 'today' : `last ${days} days`;
+      const mob = (a.devices.find(d => d.device === 'mobile') || {}).visitors || 0;
+      const ar = (a.langs.find(d => d.lang === 'ar') || {}).visitors || 0;
+      $('#vKpis').innerHTML = `
+        <div class="card kpi"><div class="label"><i style="background:var(--blue)"></i>Visitors</div><div class="value">${a.period.visitors}</div><div class="sub">${lbl} · ${a.online_now} online now</div></div>
+        <div class="card kpi"><div class="label"><i style="background:#7aa7ff"></i>Page views</div><div class="value">${a.period.views}</div><div class="sub">${a.period.visitors ? (a.period.views / a.period.visitors).toFixed(1) : 0} pages per visitor</div></div>
+        <div class="card kpi"><div class="label"><i style="background:var(--ok)"></i>Orders</div><div class="value">${a.orders}</div><div class="sub">${a.conversion}% of visitors ordered</div></div>
+        <div class="card kpi"><div class="label"><i style="background:#b35c00"></i>Leads</div><div class="value">${a.leads}</div><div class="sub">${a.period.visitors ? Math.round(mob / a.period.visitors * 100) : 0}% mobile · ${a.period.visitors ? Math.round(ar / a.period.visitors * 100) : 0}% Arabic</div></div>`;
+      drawChart($('#vChart'), a.daily.map(d => ({ ...d, revenue_baisa: d.visitors * 1000 })), d => `<b>${d.visitors} visitor${d.visitors === 1 ? '' : 's'}</b> · ${d.views} views<br>${new Date(d.day + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}`);
+      $('#vSrc').innerHTML = bars(a.sources, r => SRC[r.source] || r.source, 'visitors');
+      $('#vPages').innerHTML = bars(a.pages, r => PAGE(r.path), 'views');
+    };
+    $('#vRange').onclick = e => { const b = e.target.closest('[data-d]'); if (!b) return; days = +b.dataset.d; $$('#vRange button').forEach(x => x.classList.toggle('on', x === b)); load(); };
+    load();
+  }
+
+  // =====================================================================
+  // LEADS — "call me back" form on the website
+  // =====================================================================
+  async function viewLeads(v) {
+    let tab = 'new';
+    v.innerHTML = `<div class="view-head"><div><h2>Leads</h2><p>Customers who left their number on the website. Contact them on WhatsApp or call.</p></div></div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap" id="lTabs"></div><div class="card card-pad"><div class="list" id="lList"></div></div>`;
+    const wa = l => {
+      const ar = l.lang === 'ar';
+      const msg = ar ? `مرحباً ${l.name || ''}، معك GMG Oman 🇴🇲 بخصوص طلبك على موقعنا${l.interest ? ' (' + l.interest + ')' : ''}. كيف يمكننا مساعدتك؟` : `Hello ${l.name || ''}, this is GMG Oman 🇴🇲 about your request on our website${l.interest ? ' (' + l.interest + ')' : ''}. How can we help you?`;
+      return `https://wa.me/${String(l.phone).replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`;
+    };
+    const ST = { new: ['New', 'blue'], contacted: ['Contacted', 'warn'], won: ['Ordered', 'ok'], lost: ['No sale', ''] };
+    const load = async () => {
+      const r = await api('/api/admin/insights/leads' + (tab === 'all' ? '' : `?status=${tab}`));
+      const c = r.counts || {};
+      $('#lTabs').innerHTML = [['new', 'New'], ['contacted', 'Contacted'], ['won', 'Ordered'], ['lost', 'No sale'], ['all', 'All']].map(([k, l]) => `<button class="btn ${tab === k ? 'btn-primary' : 'btn-ghost'}" data-tab="${k}" style="padding:8px 12px;${tab === k ? 'background:var(--ink);color:#fff' : ''}">${l}${k !== 'all' && c[k] ? ` (${c[k]})` : ''}</button>`).join('');
+      $('#lList').innerHTML = r.data.length ? r.data.map(l => `<div class="row" style="align-items:flex-start;flex-wrap:wrap">
+        <div class="grow"><div class="title">${esc(l.name || 'No name')} · <a class="mono" href="tel:${esc(l.phone)}">${esc(l.phone)}</a></div>
+          <div class="meta">${l.interest ? `<b>${esc(l.interest)}</b> · ` : ''}${esc(l.source || 'direct')} · ${esc(l.page || '')} · ${ago(l.created_at)}</div>
+          ${l.message ? `<div class="meta">${esc(l.message)}</div>` : ''}</div>
+        <div class="end" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+          ${pill(ST, l.status)}
+          <a class="btn btn-sm qa-wa" href="${wa(l)}" target="_blank" rel="noopener" data-wa-lead="${esc(l.id)}">${I.wa} WhatsApp</a>
+          <a class="btn btn-sm btn-ghost" href="tel:${esc(l.phone)}" data-call-lead="${esc(l.id)}">${I.phone}</a>
+          <select class="btn btn-sm btn-ghost" data-lead-status="${esc(l.id)}" aria-label="Status">${Object.entries(ST).map(([k, [t]]) => `<option value="${k}" ${k === l.status ? 'selected' : ''}>${t}</option>`).join('')}</select>
+        </div></div>`).join('') : '<p style="color:var(--muted);font-size:14px">No leads here yet.</p>';
+      $$('.row svg', $('#lList')).forEach(s => { s.style.width = '16px'; s.style.height = '16px'; });
+    };
+    const setStatus = (id, status) => api(`/api/admin/insights/leads/${id}`, { method: 'PATCH', body: { status } });
+    v.addEventListener('click', e => {
+      const t = e.target.closest('[data-tab]'); if (t) { tab = t.dataset.tab; load(); return; }
+      const w = e.target.closest('[data-wa-lead],[data-call-lead]'); if (w) { const id = w.dataset.waLead || w.dataset.callLead; const row = w.closest('.row'); if (row.querySelector('[data-lead-status]').value === 'new') setStatus(id, 'contacted').then(load).catch(() => {}); }
+    });
+    v.addEventListener('change', e => { const s = e.target.closest('[data-lead-status]'); if (s) setStatus(s.dataset.leadStatus, s.value).then(() => { toast('Updated'); load(); }).catch(err => toast(err.message, 'error')); });
+    load();
+  }
+
   // Mobile "More" page
   function viewMore(v) {
     v.innerHTML = `<div class="view-head"><h2>More</h2></div><div id="appCard"></div><div class="card card-pad"><div class="list">
+      <a class="row" href="#/products">${I.box}<div class="grow"><div class="title">Products</div><div class="meta">Prices, stock, photos</div></div></a>
+      <a class="row" href="#/visitors">${I.eye}<div class="grow"><div class="title">Website visitors</div><div class="meta">Visits, sources, top pages</div></div></a>
+      <a class="row" href="#/leads">${I.phone}<div class="grow"><div class="title">Leads</div><div class="meta">Customers who asked for a call back</div></div></a>
       <a class="row" href="#/abandoned">${I.wa}<div class="grow"><div class="title">Abandoned carts</div><div class="meta">Follow up customers who did not finish</div></div></a>
       <a class="row" href="#/offers">${I.star}<div class="grow"><div class="title">Offers</div><div class="meta">Offer dates, products and offer prices</div></div></a>
       <a class="row" href="#/odoo">${I.sync}<div class="grow"><div class="title">Odoo sync</div></div></a>
@@ -765,7 +853,7 @@
   }
 
   // ---------- Router ----------
-  const VIEWS = { '': ['Dashboard', viewDashboard], orders: ['Orders', viewOrders], products: ['Products', viewProducts], categories: ['Categories', viewCategories], odoo: ['Odoo sync', viewOdoo], offers: ['Offers', viewOffers], abandoned: ['Abandoned carts', viewAbandoned], settings: ['Settings', viewSettings], more: ['More', viewMore] };
+  const VIEWS = { '': ['Dashboard', viewDashboard], orders: ['Orders', viewOrders], products: ['Products', viewProducts], categories: ['Categories', viewCategories], odoo: ['Odoo sync', viewOdoo], offers: ['Offers', viewOffers], visitors: ['Visitors', viewVisitors], leads: ['Leads', viewLeads], abandoned: ['Abandoned carts', viewAbandoned], settings: ['Settings', viewSettings], more: ['More', viewMore] };
   async function route() {
     const parts = location.hash.replace(/^#\/?/, '').split('/');
     const r = parts[0] || '';

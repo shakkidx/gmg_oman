@@ -51,6 +51,9 @@
     'Same-day delivery in Muscat and nearby areas': 'توصيل في نفس اليوم داخل مسقط والمناطق القريبة', '+ {p}% VAT': '+ ضريبة {p}٪',
     'Your details': 'بياناتك', 'Order summary': 'ملخص الطلب', 'Select governorate': 'اختر المحافظة',
     'View offers': 'شاهد العروض',
+    'Need help choosing?': 'تحتاج مساعدة في الاختيار؟', 'Leave your number — we will call or WhatsApp you with the right product and today’s offer price.': 'اترك رقمك — سنتصل بك أو نراسلك عبر واتساب بالمنتج المناسب وسعر العرض اليوم.',
+    'Your name': 'اسمك', 'I’m interested in': 'أنا مهتم بـ', 'Chargers': 'الشواحن', 'Power banks': 'باور بانك', 'Cables': 'الكابلات', 'Car chargers': 'شواحن السيارة', 'Bulk / company order': 'طلب بالجملة / للشركات', 'Something else': 'شيء آخر',
+    'Call me back': 'اتصلوا بي', 'Thank you! We will contact you shortly on WhatsApp or by phone.': 'شكراً لك! سنتواصل معك قريباً عبر واتساب أو الهاتف.', 'Message (optional)': 'رسالة (اختياري)',
     'Prices in your cart were updated.': 'تم تحديث الأسعار في سلتك.', 'or': 'أو', 'Offer': 'عرض',
     // header / nav / footer
     'Shop all': 'كل المنتجات', 'Power Banks': 'بنوك الطاقة', 'Chargers': 'الشواحن', 'Cables': 'الكابلات', 'Car Chargers': 'شواحن السيارة',
@@ -726,12 +729,66 @@
     els.forEach(el => io.observe(el));
   }
 
+  // ---------- Visit counter (no personal data: a random id kept in this browser) ----------
+  function firstTouch() {
+    let ft = null;
+    try { ft = JSON.parse(sessionStorage.getItem('gmg_ft') || 'null'); } catch (e) { /* ignore */ }
+    if (!ft) {
+      const q = new URLSearchParams(location.search);
+      ft = { ref: document.referrer || '', utm: q.get('utm_source') || '', click: q.has('fbclid') ? 'fbclid' : q.has('gclid') ? 'gclid' : '' };
+      try { sessionStorage.setItem('gmg_ft', JSON.stringify(ft)); } catch (e) { /* ignore */ }
+    }
+    return ft;
+  }
+  function countVisit() {
+    try {
+      if (localStorage.getItem('gmg_admin_token')) return; // the shop's own visits are not counted
+      let vid = localStorage.getItem('gmg_vid');
+      if (!vid) { vid = (Date.now().toString(36) + Math.random().toString(36).slice(2, 12)); localStorage.setItem('gmg_vid', vid); }
+      const ft = firstTouch();
+      fetch('/api/visits/track', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ vid, path: location.pathname, lang: LANG, ...ft }) }).catch(() => {});
+    } catch (e) { /* ignore */ }
+  }
+
+  // ---------- Lead form ("call me back") above the footer ----------
+  function renderLeadForm() {
+    const foot = $('#site-footer'); if (!foot) return;
+    if (/^\/(checkout|cart|order-confirmation|track)/.test(location.pathname)) return;
+    const box = document.createElement('section');
+    box.className = 'lead-box wrap';
+    box.innerHTML = `<div class="lead-card">
+      <div class="lead-copy"><h2>${t('Need help choosing?')}</h2><p>${t('Leave your number — we will call or WhatsApp you with the right product and today’s offer price.')}</p></div>
+      <form class="lead-form" novalidate>
+        <input name="name" autocomplete="name" placeholder="${t('Your name')}" aria-label="${t('Your name')}">
+        <div class="phone-input"><span>+968</span><input name="phone" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="9123 4567" aria-label="${t('Mobile number')}" required></div>
+        <select name="interest" aria-label="${t('I’m interested in')}"><option value="">${t('I’m interested in')}</option>${['Chargers', 'Power banks', 'Cables', 'Car chargers', 'Bulk / company order', 'Something else'].map(o => `<option value="${o}">${t(o)}</option>`).join('')}</select>
+        <input name="website" tabindex="-1" autocomplete="off" class="hp" aria-hidden="true">
+        <button class="btn btn-primary" type="submit">${I.phone.replace('<svg', '<svg width="18" height="18"')} ${t('Call me back')}</button>
+        <p class="lead-msg" role="status"></p>
+      </form></div>`;
+    foot.parentNode.insertBefore(box, foot);
+    const f = $('form', box);
+    f.addEventListener('submit', async e => {
+      e.preventDefault();
+      const btn = $('button', f); const msg = $('.lead-msg', f);
+      btn.disabled = true; msg.className = 'lead-msg'; msg.textContent = '';
+      try {
+        await api('/api/visits/lead', { method: 'POST', body: { name: f.name.value, phone: f.phone.value, interest: f.interest.value, website: f.website.value, page: location.pathname, ...firstTouch() } });
+        [...f.children].forEach(el => { if (!el.classList.contains('lead-msg')) el.style.display = 'none'; });
+        msg.className = 'lead-msg ok'; msg.textContent = t('Thank you! We will contact you shortly on WhatsApp or by phone.');
+        track('Lead', { content_name: f.interest.value || 'callback' });
+      } catch (err) { msg.className = 'lead-msg err'; msg.textContent = err.message; btn.disabled = false; }
+    });
+  }
+
   // ---------- Boot ----------
   function boot() {
     translateStatic();
     renderHeader();
+    renderLeadForm();
     renderFooter();
     updateCount(false);
+    countVisit();
     Cart.on(() => { updateCount(false); renderDrawer(); });
     reveal();
   }

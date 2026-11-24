@@ -272,3 +272,32 @@ CREATE TABLE IF NOT EXISTS admin_push_subscriptions (
   last_sent_at TEXT,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Leads from the website form ("call me back / send me offers")
+CREATE TABLE IF NOT EXISTS leads (
+  id TEXT PRIMARY KEY,
+  name TEXT,
+  phone TEXT NOT NULL,
+  interest TEXT,
+  message TEXT,
+  page TEXT,
+  source TEXT,
+  lang TEXT DEFAULT 'en',
+  status TEXT NOT NULL DEFAULT 'new', -- 'new' | 'contacted' | 'won' | 'lost'
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_leads_created ON leads(created_at);
+
+-- Website visits (no IP or personal data: a random visitor id kept in the browser)
+CREATE TABLE IF NOT EXISTS page_views (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  day TEXT NOT NULL,           -- Oman date YYYY-MM-DD
+  visitor_id TEXT NOT NULL,
+  path TEXT NOT NULL,
+  source TEXT,                 -- instagram | facebook | google | whatsapp | tiktok | snapchat | direct | other site
+  device TEXT,                 -- mobile | desktop
+  lang TEXT,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_page_views_day ON page_views(day);
