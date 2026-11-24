@@ -2,8 +2,8 @@
    - shows new-order notifications sent by the server (Web Push), even when the app is closed
    - opens the order when the notification is tapped
    - keeps a copy of the app shell so it opens instantly; orders always come live from the server */
-const SHELL = 'gmg-admin-v1';
-const FILES = ['/admin/', '/admin/login.html', '/images/brand/admin-icon-192.png'];
+const SHELL = 'gmg-admin-v2';
+const FILES = ['/admin/', '/admin/login.html', '/images/brand/admin-icon-192.png?v=2'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(SHELL).then(c => c.addAll(FILES)).catch(() => {}));
@@ -29,8 +29,8 @@ self.addEventListener('push', e => {
       body: d.body || 'New order received',
       tag: d.tag || 'gmg-order',
       renotify: true,
-      icon: '/images/brand/admin-icon-192.png',
-      badge: '/images/brand/admin-icon-192.png',
+      icon: '/images/brand/admin-icon-192.png?v=2',
+      badge: '/images/brand/admin-icon-192.png?v=2',
       data: { url: d.url || '/admin/#/orders' },
       requireInteraction: true
     });
