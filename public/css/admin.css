@@ -272,3 +272,21 @@ img { display: block; max-width: 100%; }
 .login-card p { text-align: center; color: var(--muted); margin: 6px 0 24px; }
 @media (max-width: 599px) { .hide-sm { display: none; } .prod .line { flex-wrap: wrap; gap: 2px 8px; } }
 @media (min-width: 1024px) { #sSave { } .view > div[style*='sticky'] { bottom: 20px !important; } }
+
+/* ---------- Admin app (installed on phone) ---------- */
+.app-card { display: flex; gap: 14px; align-items: flex-start; background: #fff; border: 1px solid var(--line-2); border-radius: 16px; padding: 14px; margin-bottom: 14px; box-shadow: 0 6px 20px rgba(8, 22, 52, .06); }
+.app-card.ok { background: #effaf4; border-color: #cdebd9; }
+.app-card img { width: 48px; height: 48px; border-radius: 12px; flex: none; }
+.app-card b { display: block; font-size: 15px; }
+.app-card p { margin: 4px 0 10px; font-size: 13.5px; color: var(--muted); line-height: 1.45; }
+.app-card p b { display: inline; font-size: inherit; color: var(--ink); }
+.app-card p svg { vertical-align: -2px; }
+.order-row .quick { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.order-row .quick .btn { min-height: 38px; }
+.order-row .quick svg { width: 16px; height: 16px; }
+.qa-wa { background: #25d366; color: #fff; border: 0; }
+.qa-wa:hover { background: #1ebe5b; }
+@media (display-mode: standalone) {
+  .topbar { padding-top: max(env(safe-area-inset-top), 10px); }
+  .tabbar { padding-bottom: max(env(safe-area-inset-bottom), 8px); }
+}

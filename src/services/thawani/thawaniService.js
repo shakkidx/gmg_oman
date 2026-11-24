@@ -307,6 +307,7 @@ class ThawaniService {
     const OdooService = require('../odoo/odooService');
     OdooService.syncOrderToOdoo(order.id).catch(err => console.error('Odoo sync after payment failed:', err.message));
     require('../metaCapi').sendPurchase(order.id).catch(err => console.error('Meta CAPI after payment failed:', err.message));
+    require('../webPush').notifyNewOrder(order.id);
   }
 
   /** Cancel an unpaid online order and return its stock. */

@@ -260,3 +260,15 @@ CREATE TABLE IF NOT EXISTS abandoned_checkouts (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_abandoned_updated ON abandoned_checkouts(updated_at);
+
+-- Phones that installed the admin app and allowed notifications (new-order alerts)
+CREATE TABLE IF NOT EXISTS admin_push_subscriptions (
+  endpoint TEXT PRIMARY KEY,
+  p256dh TEXT NOT NULL,
+  auth TEXT NOT NULL,
+  admin_username TEXT,
+  device TEXT,
+  last_status INTEGER,
+  last_sent_at TEXT,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);

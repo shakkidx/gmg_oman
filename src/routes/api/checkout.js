@@ -273,6 +273,7 @@ router.post('/order', async (req, res) => {
   if (paymentMethod !== 'thawani') {
     OdooService.syncOrderToOdoo(orderId).catch(err => console.error(`Background Odoo sync error for order ${orderNumber}:`, err.message));
     MetaCapi.sendPurchase(orderId).catch(err => console.error(`Meta CAPI error for ${orderNumber}:`, err.message));
+    require('../../services/webPush').notifyNewOrder(orderId);
   }
 
   // 5. Thawani session

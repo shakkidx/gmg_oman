@@ -129,7 +129,9 @@ app.get('/checkout', page('checkout.html'));
 app.get('/contact', page('contact.html'));
 app.get('/policies', page('policies.html'));
 app.get('/track', page('order-confirmation.html'));
-app.get('/admin', page('admin/index.html'));
+// The admin app lives under /admin/ (that is the installed app's scope on iPhone/Android)
+app.get('/admin', (req, res, next) => (req.originalUrl.split('?')[0] === '/admin' ? res.redirect(301, '/admin/') : next()), page('admin/index.html'));
+app.get('/admin/manifest.webmanifest', (req, res) => { res.setHeader('Content-Type', 'application/manifest+json'); res.setHeader('Cache-Control', 'no-cache'); res.sendFile(path.join(PUBLIC_DIR, 'admin/manifest.webmanifest')); });
 
 // 4. Public APIs
 app.use('/api/store', require('./routes/api/store'));
@@ -151,6 +153,7 @@ app.use('/api/admin/odoo', require('./routes/api/admin/odoo'));
 app.use('/api/admin/settings', require('./routes/api/admin/settings'));
 app.use('/api/admin/offers', require('./routes/api/admin/offers'));
 app.use('/api/admin/abandoned', require('./routes/api/admin/abandoned'));
+app.use('/api/admin/push', require('./routes/api/admin/push'));
 
 // 6. Health check
 app.get('/api/health', (req, res) => {

@@ -7,7 +7,7 @@
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "seed": "node src/database/seed.js",
-    "test": "node tests/pricing.test.js && node tests/inventory.test.js && node tests/odooAdapter.test.js && node tests/thawani.test.js && node tests/offers.test.js",
+    "test": "node tests/pricing.test.js && node tests/inventory.test.js && node tests/odooAdapter.test.js && node tests/thawani.test.js && node tests/offers.test.js && node tests/webpush.test.js",
     "discover-odoo": "node scripts/discover_odoo.js"
   },
   "keywords": [],

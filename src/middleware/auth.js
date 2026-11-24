@@ -14,7 +14,7 @@ function generateToken(user) {
       fullName: user.full_name
     },
     JWT_SECRET,
-    { expiresIn: '12h' }
+    { expiresIn: '30d' } // the admin app on the phone stays signed in
   );
 }
 

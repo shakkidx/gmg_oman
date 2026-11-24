@@ -100,12 +100,25 @@
   const ODOO = { odoo_confirmed: ['In Odoo', 'ok'], odoo_synced: ['In Odoo', 'ok'], pending_integration: ['Odoo: waiting', ''], odoo_failed: ['Odoo: failed', 'bad'] };
   const pill = (map, k) => { const [t, c] = map[k] || [k, '']; return `<span class="pill ${c}">${esc(t)}</span>`; };
 
+  /** WhatsApp message asking the customer to confirm the order, in the language they ordered in. */
+  function confirmMsg(o, items) {
+    const ar = (o.lang || (o.tracking_json && (() => { try { return JSON.parse(o.tracking_json).lang; } catch (e) { return ''; } })())) === 'ar';
+    const total = ((o.total_baisa || 0) / 1000).toFixed(3);
+    const list = (items || []).map(i => `• ${ar && i.name_ar ? i.name_ar : i.name_en} × ${i.quantity}`).join('\n');
+    const paid = o.payment_method === 'thawani' && o.payment_status === 'paid';
+    const where = [o.delivery_address, o.delivery_city, o.delivery_governorate].filter((v, i, a) => v && a.indexOf(v) === i).join(', ');
+    return ar
+      ? `مرحباً ${o.customer_name}، شكراً لطلبك من GMG Oman 🇴🇲\nرقم الطلب: ${o.order_number}${list ? '\n' + list : ''}\nالإجمالي: ${total} ر.ع. (${paid ? 'مدفوع بالبطاقة' : 'الدفع عند الاستلام'})\nالتوصيل مجاني إلى: ${where}\nيرجى الرد بـ "نعم" لتأكيد الطلب وسنقوم بالتوصيل خلال ١–٣ أيام.`
+      : `Hello ${o.customer_name}, thank you for your order from GMG Oman 🇴🇲\nOrder: ${o.order_number}${list ? '\n' + list : ''}\nTotal: OMR ${total} (${paid ? 'paid by card' : 'cash on delivery'})\nFree delivery to: ${where}\nPlease reply YES to confirm and we will deliver within 1–3 days.`;
+  }
+  const waUrl = (phone, text) => `https://wa.me/${String(phone || '').replace(/\D/g, '')}?text=${encodeURIComponent(text)}`;
+
   // =====================================================================
   // DASHBOARD
   // =====================================================================
   async function viewDashboard(v) {
     v.innerHTML = `
-      <div id="pwBanner"></div>
+      <div id="pwBanner"></div><div id="appCard"></div>
       <div class="kpis">${Array.from({ length: 4 }, () => '<div class="card kpi"><div class="skel" style="height:14px;width:60%"></div><div class="skel" style="height:26px;width:80%;margin-top:12px"></div></div>').join('')}</div>
       <div class="dash-grid">
         <div style="display:grid;gap:16px;align-content:start">
@@ -186,7 +199,7 @@
   async function viewOrders(v) {
     const TABS = [['to_ship', 'To ship'], ['', 'All'], ['awaiting_payment', 'Awaiting payment'], ['shipped', 'Shipped'], ['delivered', 'Delivered'], ['cancelled', 'Cancelled']];
     let tab = sessionStorage.getItem('adm_order_tab') ?? 'to_ship'; let q = '';
-    v.innerHTML = `<div class="view-head"><div><h2>Orders</h2><p>Tap an order to see details and update its status.</p></div></div>
+    v.innerHTML = `<div id="appCard"></div><div class="view-head"><div><h2>Orders</h2><p>Confirm with the customer on WhatsApp, then pack and ship. Tap an order for details.</p></div></div>
       <div class="tabs" id="oTabs"></div>
       <div class="filters"><label class="search">${I.search}<input id="oSearch" placeholder="Search order no., name or phone" type="search"></label></div>
       <div class="card" id="oList"></div>`;
@@ -206,10 +219,22 @@
             <div class="amt" style="grid-row:span 1">${o.total_formatted}</div>
             <div class="who">${esc(o.customer_name)} · ${esc(o.customer_phone)}<br><span class="when">${esc(o.delivery_city)}, ${esc(o.delivery_governorate)}</span></div>
             <div class="pills">${pill(STATUS, o.fulfillment_status)}${pill(PAY, o.payment_status)}</div>
+            ${['confirmed', 'processing'].includes(o.fulfillment_status) ? `<div class="quick">
+              <a class="btn btn-sm qa-wa" href="${waUrl(o.customer_phone, confirmMsg(o))}" target="_blank" rel="noopener" data-stop>${I.wa} Confirm</a>
+              <a class="btn btn-sm btn-ghost" href="tel:${esc(o.customer_phone)}" data-stop>${I.phone} Call</a>
+              ${o.fulfillment_status === 'confirmed' && (o.payment_method === 'cod' || o.payment_status === 'paid') ? `<button class="btn btn-sm btn-primary" data-quick-set="processing" data-id="${o.id}">Start packing</button>` : ''}
+              ${o.fulfillment_status === 'processing' ? `<button class="btn btn-sm btn-primary" data-quick-set="shipped" data-id="${o.id}">Shipped</button>` : ''}
+            </div>` : ''}
           </div>`).join('') : `<div class="empty"><h3>No orders here</h3><p>${tab === 'to_ship' ? 'Nothing waiting to be shipped right now.' : 'Try another tab or search.'}</p></div>`;
       } catch (e) { $('#oList').innerHTML = `<div class="empty"><h3>Couldn't load orders</h3><p>${esc(e.message)}</p></div>`; }
     }
-    $('#oList').onclick = e => { const r = e.target.closest('[data-order]'); if (r) openOrder(r.dataset.order, load); };
+    $('#oList').onclick = e => {
+      if (e.target.closest('[data-stop]')) return;
+      const q = e.target.closest('[data-quick-set]');
+      if (q) { busy(q, async () => { await api(`/api/admin/orders/${q.dataset.id}/status`, { method: 'PUT', body: { fulfillmentStatus: q.dataset.quickSet } }); toast('Order updated'); load(); }).catch(err => toast(err.message, 'error')); return; }
+      const r = e.target.closest('[data-order]'); if (r) openOrder(r.dataset.order, load);
+    };
+    window.GMG_reloadOrders = load;
     load();
   }
 
@@ -222,7 +247,7 @@
     const cancelled = ['cancelled', 'refunded'].includes(o.fulfillment_status);
     const awaitingPay = o.payment_method === 'thawani' && o.payment_status !== 'paid';
     const phone = (o.customer_phone || '').replace(/\D/g, '');
-    const nextAction = { confirmed: ['processing', 'Start packing'], processing: ['shipped', 'Mark as shipped'], shipped: ['delivered', 'Mark as delivered'] }[o.fulfillment_status];
+    const nextAction = { confirmed: ['processing', 'Customer confirmed · Start packing'], processing: ['shipped', 'Mark as shipped'], shipped: ['delivered', 'Mark as delivered'] }[o.fulfillment_status];
     const waMsg = encodeURIComponent(`Hello ${o.customer_name}, this is Global Markets Gateway about your order ${o.order_number}.`);
 
     const body = `
@@ -239,7 +264,7 @@
       <div class="card card-pad section">
         <h3 style="margin-bottom:12px">Customer</h3>
         <dl class="kv"><dt>Name</dt><dd>${esc(o.customer_name)}</dd><dt>Phone</dt><dd>${esc(o.customer_phone)}</dd>${o.customer_email ? `<dt>Email</dt><dd>${esc(o.customer_email)}</dd>` : ''}<dt>Address</dt><dd>${esc(o.delivery_address)}<br>${esc(o.delivery_city)}, ${esc(o.delivery_governorate)}</dd>${o.customer_notes ? `<dt>Notes</dt><dd>${esc(o.customer_notes)}</dd>` : ''}</dl>
-        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><a class="btn btn-sm btn-ghost" href="https://wa.me/${phone}?text=${waMsg}" target="_blank" rel="noopener">${I.wa} WhatsApp</a><a class="btn btn-sm btn-ghost" href="tel:+${phone}">${I.phone} Call</a></div>
+        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">${!cancelled ? `<a class="btn btn-sm qa-wa" href="${waUrl(phone, confirmMsg(o, o.items))}" target="_blank" rel="noopener">${I.wa} Confirm on WhatsApp</a>` : ''}<a class="btn btn-sm btn-ghost" href="https://wa.me/${phone}?text=${waMsg}" target="_blank" rel="noopener">${I.wa} Message</a><a class="btn btn-sm btn-ghost" href="tel:+${phone}">${I.phone} Call</a></div>
       </div>
       <div class="card card-pad section">
         <h3 style="margin-bottom:6px">Items</h3>
@@ -727,7 +752,8 @@
 
   // Mobile "More" page
   function viewMore(v) {
-    v.innerHTML = `<div class="view-head"><h2>More</h2></div><div class="card card-pad"><div class="list">
+    v.innerHTML = `<div class="view-head"><h2>More</h2></div><div id="appCard"></div><div class="card card-pad"><div class="list">
+      <a class="row" href="#/abandoned">${I.wa}<div class="grow"><div class="title">Abandoned carts</div><div class="meta">Follow up customers who did not finish</div></div></a>
       <a class="row" href="#/offers">${I.star}<div class="grow"><div class="title">Offers</div><div class="meta">Offer dates, products and offer prices</div></div></a>
       <a class="row" href="#/odoo">${I.sync}<div class="grow"><div class="title">Odoo sync</div></div></a>
       <a class="row" href="#/categories">${I.tag}<div class="grow"><div class="title">Categories</div></div></a>
@@ -741,16 +767,104 @@
   // ---------- Router ----------
   const VIEWS = { '': ['Dashboard', viewDashboard], orders: ['Orders', viewOrders], products: ['Products', viewProducts], categories: ['Categories', viewCategories], odoo: ['Odoo sync', viewOdoo], offers: ['Offers', viewOffers], abandoned: ['Abandoned carts', viewAbandoned], settings: ['Settings', viewSettings], more: ['More', viewMore] };
   async function route() {
-    const r = (location.hash.replace(/^#\/?/, '').split('/')[0]) || '';
+    const parts = location.hash.replace(/^#\/?/, '').split('/');
+    const r = parts[0] || '';
     const [title, fn] = VIEWS[r] || VIEWS[''];
     closeSheet();
     $('#viewTitle').textContent = title; document.title = `${title} — Admin`;
     renderNav(r);
     const v = $('#view'); window.scrollTo(0, 0);
     try { await fn(v); } catch (e) { v.innerHTML = `<div class="empty"><h3>Something went wrong</h3><p>${esc(e.message)}</p></div>`; }
+    if (r === 'orders' && parts[1]) { openOrder(parts[1], window.GMG_reloadOrders); history.replaceState(null, '', '#/orders'); }
   }
   window.addEventListener('hashchange', route);
   const user = (() => { try { return JSON.parse(localStorage.getItem('gmg_admin_user') || '{}'); } catch (e) { return {}; } })();
   $('#topRight').innerHTML = `<span style="font-size:13px;color:var(--muted);font-weight:600" class="hide-sm">${esc(user.fullName || user.username || '')}</span><a class="icon-btn" href="/" target="_blank" rel="noopener" aria-label="View website" title="View website">${I.home}</a>`;
   route();
+  initApp();
+
+  // =====================================================================
+  // ADMIN APP (installed on iPhone / Android): notifications + live new-order alerts
+  // =====================================================================
+  function initApp() {
+    const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    let installEvt = null;
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/admin/sw.js', { scope: '/admin/' }).catch(() => {});
+      navigator.serviceWorker.addEventListener('message', e => {
+        if (e.data && e.data.type === 'open' && e.data.url) location.href = e.data.url;
+        if (e.data && e.data.type === 'new-order') checkNew(true);
+      });
+    }
+    addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; renderAppCard(); });
+
+    const pushOK = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+    async function subscription() { if (!pushOK) return null; const reg = await navigator.serviceWorker.ready; return reg.pushManager.getSubscription(); }
+    async function enable(btn) {
+      await busy(btn, async () => {
+        const perm = await Notification.requestPermission();
+        if (perm !== 'granted') throw new Error('Notifications are blocked. Allow them in your phone settings for this app.');
+        const { publicKey } = await api('/api/admin/push/key');
+        const raw = atob(publicKey.replace(/-/g, '+').replace(/_/g, '/')); const key = new Uint8Array([...raw].map(c => c.charCodeAt(0)));
+        const reg = await navigator.serviceWorker.ready;
+        let sub = await reg.pushManager.getSubscription();
+        if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
+        await api('/api/admin/push/subscribe', { method: 'POST', body: { subscription: sub.toJSON() } });
+        toast('Notifications on for this phone');
+      }).catch(err => toast(err.message, 'error'));
+      renderAppCard();
+    }
+    async function disable(btn) {
+      await busy(btn, async () => { const s = await subscription(); if (s) { await api('/api/admin/push/unsubscribe', { method: 'POST', body: { endpoint: s.endpoint } }); await s.unsubscribe(); } toast('Notifications off'); }).catch(err => toast(err.message, 'error'));
+      renderAppCard();
+    }
+    async function renderAppCard() {
+      const slot = $('#appCard'); if (!slot) return;
+      const sub = await subscription().catch(() => null);
+      let html = '';
+      if (!standalone && ios) html = `<div class="app-card"><img src="/images/brand/admin-icon-192.png" alt=""><div><b>Install the admin app</b><p>Tap <b>Share</b> <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 8l5-5 5 5M5 13v7h14v-7"/></svg> at the bottom of Safari, then <b>Add to Home Screen</b>. Open it from the home screen to turn on order notifications.</p></div></div>`;
+      else if (!standalone && installEvt) html = `<div class="app-card"><img src="/images/brand/admin-icon-192.png" alt=""><div><b>Install the admin app</b><p>Get it on your home screen with new-order notifications.</p><button class="btn btn-sm btn-primary" id="appInstall">Install app</button></div></div>`;
+      else if (pushOK && !sub) html = `<div class="app-card"><img src="/images/brand/admin-icon-192.png" alt=""><div><b>Get new-order alerts</b><p>Turn on notifications to hear about every new order on this phone, even when the app is closed.</p><button class="btn btn-sm btn-primary" id="pushOn" data-busy="">Turn on notifications</button></div></div>`;
+      else if (pushOK && sub) html = `<div class="app-card ok"><img src="/images/brand/admin-icon-192.png" alt=""><div><b>New-order alerts are on</b><p>This phone gets a notification for every new order.</p><button class="btn btn-sm btn-ghost" id="pushTest" data-busy="">Send test</button> <button class="btn btn-sm btn-ghost" id="pushOff" data-busy="">Turn off</button></div></div>`;
+      slot.innerHTML = html;
+      const b1 = $('#appInstall'); if (b1) b1.onclick = async () => { installEvt.prompt(); await installEvt.userChoice.catch(() => {}); installEvt = null; renderAppCard(); };
+      const b2 = $('#pushOn'); if (b2) b2.onclick = () => enable(b2);
+      const b3 = $('#pushOff'); if (b3) b3.onclick = () => disable(b3);
+      const b4 = $('#pushTest'); if (b4) b4.onclick = () => busy(b4, async () => { const r = await api('/api/admin/push/test', { method: 'POST' }); toast(`Test sent to ${r.sent} device${r.sent === 1 ? '' : 's'}`); }).catch(err => toast(err.message, 'error'));
+    }
+    window.GMG_renderAppCard = renderAppCard;
+    addEventListener('hashchange', () => setTimeout(renderAppCard, 50));
+    setTimeout(renderAppCard, 300);
+
+    // Live alerts while the app is open: check every 30 s, beep + vibrate + badge on a new order
+    let last = null;
+    function beep() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        [0, 0.18, 0.36].forEach((t, i) => { const o = ctx.createOscillator(); const g = ctx.createGain(); o.frequency.value = [880, 1175, 1568][i]; g.gain.setValueAtTime(0.25, ctx.currentTime + t); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.16); o.connect(g); g.connect(ctx.destination); o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + 0.17); });
+      } catch (e) { /* ignore */ }
+    }
+    async function checkNew(fromPush) {
+      try {
+        const r = await api('/api/admin/orders?limit=1');
+        const newest = r.data[0] ? r.data[0].created_at + r.data[0].id : '';
+        toShip = r.tab_counts.to_ship;
+        if (navigator.setAppBadge) { try { toShip ? navigator.setAppBadge(toShip) : navigator.clearAppBadge(); } catch (e) { /* ignore */ } }
+        const cur = (location.hash.replace(/^#\/?/, '').split('/')[0]) || '';
+        renderNav(cur);
+        if (last !== null && newest !== last && r.data[0]) {
+          if (!fromPush) beep();
+          if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+          toast(`New order ${r.data[0].order_number} · ${r.data[0].total_formatted}`);
+          if (cur === 'orders' && window.GMG_reloadOrders) window.GMG_reloadOrders();
+          if (cur === '') route();
+        }
+        last = newest;
+      } catch (e) { /* offline */ }
+    }
+    checkNew();
+    setInterval(() => { if (!document.hidden) checkNew(); }, 30000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) checkNew(); });
+  }
 })();

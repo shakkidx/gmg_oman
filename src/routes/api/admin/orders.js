@@ -68,7 +68,8 @@ router.get('/', requireAdmin, (req, res) => {
         o.delivery_governorate, o.delivery_city,
         o.subtotal_baisa, o.delivery_fee_baisa, o.vat_baisa, o.discount_baisa, o.total_baisa,
         o.payment_method, o.payment_status, o.fulfillment_status,
-        o.odoo_order_status, o.odoo_sale_order_name, o.created_at
+        o.odoo_order_status, o.odoo_sale_order_name, o.created_at,
+        json_extract(o.tracking_json, '$.lang') AS lang, o.delivery_address
       FROM orders o
       ${whereClause}
       ORDER BY o.created_at DESC
