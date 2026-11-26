@@ -9,7 +9,8 @@ const { maxOrderQty, getSetting } = require('../services/inventoryService');
 
 const SITE = (process.env.PUBLIC_URL || 'https://gmgoman.com').replace(/\/$/, '');
 const csv = v => { const s = String(v == null ? '' : v).replace(/\r?\n+/g, ' ').trim(); return /[",]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
-const omr = b => `${(Math.round(b) / 1000).toFixed(3)} OMR`;
+// Meta reads prices with at most 2 decimals, so round to the nearest 10 baisa (11.235 -> 11.24)
+const omr = b => `${(Math.round(b / 10) / 100).toFixed(2)} OMR`;
 const stripHtml = s => String(s || '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
 const abs = u => (!u ? '' : /^https?:/.test(u) ? u : SITE + (u.startsWith('/') ? u : '/' + u));
 // "2026-11-20T00:00:00+04:00" -> "2026-11-20T00:00+04:00" (Meta's ISO-8601 range format)
