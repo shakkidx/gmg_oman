@@ -57,6 +57,8 @@ const PUBLIC_DIR = path.resolve(__dirname, '../public');
 for (const p of ['/offers', '/offer', '/catalogue', '/national-day']) app.get(p, (req, res, next) => (req.path === '/offers/' ? next() : res.redirect(301, '/offers/')));
 // /offers/ is built on the server from Admin → Offers (live prices, countdown, "offer ended" after the end date)
 app.get('/offers/', require('./routes/offers'));
+// Product feed for Meta Commerce Manager (catalogue for Facebook/Instagram shop and ads)
+app.get(['/feeds/meta.csv', '/feeds/facebook.csv'], require('./routes/feeds'));
 app.get('/offers/catalogue', (req, res, next) => (req.path.endsWith('/') ? next() : res.redirect(301, '/offers/catalogue/')));
 
 let serveGz = () => false;
