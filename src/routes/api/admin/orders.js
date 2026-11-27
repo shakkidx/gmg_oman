@@ -68,7 +68,7 @@ router.get('/', requireAdmin, (req, res) => {
         o.delivery_governorate, o.delivery_city,
         o.subtotal_baisa, o.delivery_fee_baisa, o.vat_baisa, o.discount_baisa, o.total_baisa,
         o.payment_method, o.payment_status, o.fulfillment_status,
-        o.odoo_order_status, o.odoo_sale_order_name, o.created_at,
+        o.odoo_order_status, o.odoo_sale_order_name, o.created_at, o.order_source,
         json_extract(o.tracking_json, '$.lang') AS lang, o.delivery_address
       FROM orders o
       ${whereClause}
@@ -104,6 +104,73 @@ router.get('/', requireAdmin, (req, res) => {
  * GET /api/admin/orders/:id
  * Full order details, line items with cost breakdown, and timeline
  */
+// ---------- Manual order (WhatsApp / phone / walk-in) ----------
+// Saved exactly like a website order: server prices (admin may set a different price per
+// line, VAT included), stock deducted, then sent to Odoo as a sales order.
+router.post('/manual', requireAdmin, (req, res) => {
+  const { priceCart, findGovernorate, shopSettings } = require('../../../services/cartPricing');
+  const OfferService = require('../../../services/offerService');
+  const b = req.body || {};
+  const name = String(b.customerName || '').trim();
+  const digits = String(b.customerPhone || '').replace(/\D/g, '').replace(/^968/, '');
+  const area = String(b.deliveryArea || '').trim();
+  const pay = ['cod', 'bank_transfer', 'cash'].includes(b.paymentMethod) ? b.paymentMethod : 'cod';
+  const source = ['whatsapp', 'phone', 'walk_in', 'instagram'].includes(b.source) ? b.source : 'whatsapp';
+  const gov = findGovernorate(b.governorate);
+  if (name.length < 2) return res.status(400).json({ success: false, error: 'Enter the customer name.' });
+  if (!/^[279]\d{7}$/.test(digits)) return res.status(400).json({ success: false, error: 'Enter an 8-digit Omani mobile number.' });
+  if (!gov) return res.status(400).json({ success: false, error: 'Choose the governorate.' });
+  if (area.length < 2) return res.status(400).json({ success: false, error: 'Enter the area / address.' });
+  const reqItems = (Array.isArray(b.items) ? b.items : []).map(i => ({ sku: String(i.sku || ''), quantity: Math.max(1, parseInt(i.quantity, 10) || 1), price: i.priceBaisa != null && i.priceBaisa !== '' ? Math.round(Number(i.priceBaisa)) : null })).filter(i => i.sku);
+  if (!reqItems.length) return res.status(400).json({ success: false, error: 'Add at least one product.' });
+  if (reqItems.some(i => i.price != null && !(i.price >= 0))) return res.status(400).json({ success: false, error: 'Check the prices.' });
+
+  const db = getDatabase();
+  const orderId = uuidv4();
+  const orderNumber = `GMG-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 900 + 100)}`;
+  const deliveryFee = Math.max(0, Math.round(Number(b.deliveryFeeBaisa) || 0));
+  let totalsOut;
+  try {
+    runTransaction(() => {
+      const priced = priceCart(reqItems.map(i => ({ sku: i.sku, quantity: i.quantity })), { governorate: gov.code, lang: 'en' });
+      const problem = priced.issues[0];
+      if (problem) {
+        const p = db.prepare('SELECT name_en FROM products WHERE sku = ?').get(problem.sku) || {};
+        throw new Error(problem.code === 'QTY_REDUCED' ? `Only ${problem.max} × '${p.name_en || problem.sku}' in stock.` : `'${p.name_en || problem.sku}' is not available.`);
+      }
+      // Admin price (VAT included) replaces the server price where given
+      const lines = priced.lines.map(l => {
+        const want = reqItems.find(i => i.sku === l.sku);
+        return want && want.price != null ? { ...l, unit_price_baisa: want.price, line_total_baisa: want.price * l.quantity, vat_included: true, manual_price: true } : l;
+      });
+      for (const l of lines) {
+        const upd = db.prepare('UPDATE products SET stock_quantity = stock_quantity - ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND stock_quantity >= ?').run(l.quantity, l.product_id, l.quantity);
+        if (!upd.changes) throw new Error(`'${l.name_en}' is no longer in stock in that quantity.`);
+      }
+      const shop = shopSettings();
+      const t = OfferService.totals(lines, { deliveryFeeBaisa: deliveryFee, discountBaisa: 0, vatRate: shop.vatRate, shopVatInclusive: shop.vatInclusive });
+      totalsOut = t;
+      db.prepare(`INSERT INTO orders (id, order_number, customer_name, customer_phone, customer_email, delivery_governorate, delivery_city, delivery_address,
+          delivery_postal_code, customer_notes, subtotal_baisa, discount_baisa, delivery_fee_baisa, vat_baisa, total_baisa, currency,
+          payment_method, payment_status, fulfillment_status, odoo_order_status, order_source)
+        VALUES (?, ?, ?, ?, NULL, ?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, 'OMR', ?, ?, 'confirmed', 'pending_integration', ?)`)
+        .run(orderId, orderNumber, name, '+968' + digits, gov.name_en, area, area, String(b.notes || '').trim() || null,
+          t.subtotalBaisa, t.discountBaisa, t.deliveryFeeBaisa, t.vatBaisa, t.totalBaisa, pay, pay === 'cod' ? 'unpaid' : 'paid', source);
+      const ins = db.prepare(`INSERT INTO order_items (id, order_id, product_id, sku, name_en, name_ar, unit_price_baisa, cost_price_baisa, quantity, total_price_baisa,
+          offer_id, offer_name, original_price_baisa, vat_included) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+      for (const l of lines) ins.run(uuidv4(), orderId, l.product_id, l.sku, l.name_en, l.name_ar, l.unit_price_baisa, l.cost_price_baisa || 0, l.quantity, l.line_total_baisa,
+        !l.manual_price && l.offer ? l.offer.id : null, !l.manual_price && l.offer ? l.offer.name_en : null, l.original_price_baisa, l.vat_included ? 1 : 0);
+      db.prepare(`INSERT INTO order_events (id, order_id, event_type, description, created_by) VALUES (?, ?, 'order_placed', ?, ?)`)
+        .run(uuidv4(), orderId, `Order entered by admin · via ${source} · ${({ cod: 'cash on delivery', bank_transfer: 'bank transfer (paid)', cash: 'cash (paid)' })[pay]}`, req.adminUser.username);
+    });
+  } catch (err) {
+    return res.status(409).json({ success: false, error: err.message });
+  }
+  AuditService.log({ adminUserId: req.adminUser.id, action: 'ORDER_MANUAL_CREATE', entityType: 'order', entityId: orderId, details: { order_number: orderNumber, total_baisa: totalsOut.totalBaisa }, req });
+  OdooService.syncOrderToOdoo(orderId).catch(err => console.error(`Odoo sync error for manual order ${orderNumber}:`, err.message));
+  res.json({ success: true, id: orderId, orderNumber, total_baisa: totalsOut.totalBaisa, total_formatted: PricingService.formatOmr(totalsOut.totalBaisa) });
+});
+
 router.get('/:id', requireAdmin, (req, res) => {
   try {
     const { id } = req.params;

@@ -37,6 +37,7 @@
     phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>',
     out: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h5v16h-5M10 8l-4 4 4 4M6 12h10"/></svg>',
     more: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>',
+    printer: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg>',
     eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
     download: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>'
   };
@@ -212,7 +213,7 @@
   async function viewOrders(v) {
     const TABS = [['to_ship', 'To ship'], ['', 'All'], ['awaiting_payment', 'Awaiting payment'], ['shipped', 'Shipped'], ['delivered', 'Delivered'], ['cancelled', 'Cancelled']];
     let tab = sessionStorage.getItem('adm_order_tab') ?? 'to_ship'; let q = '';
-    v.innerHTML = `<div id="appCard"></div><div class="view-head"><div><h2>Orders</h2><p>Confirm with the customer on WhatsApp, then pack and ship. Tap an order for details.</p></div></div>
+    v.innerHTML = `<div id="appCard"></div><div class="view-head"><div><h2>Orders</h2><p>Confirm with the customer on WhatsApp, then pack and ship. Tap an order for details.</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-ghost" id="oBatchLabels">${I.printer} Labels to ship</button><button class="btn btn-blue" id="oNew">${I.plus} New order</button></div></div>
       <div class="tabs" id="oTabs"></div>
       <div class="filters"><label class="search">${I.search}<input id="oSearch" placeholder="Search order no., name or phone" type="search"></label></div>
       <div class="card" id="oList"></div>`;
@@ -231,8 +232,9 @@
             <div><div class="no">${esc(o.order_number)}</div><div class="when">${when(o.created_at)}</div></div>
             <div class="amt" style="grid-row:span 1">${o.total_formatted}</div>
             <div class="who">${esc(o.customer_name)} · ${esc(o.customer_phone)}<br><span class="when">${esc(o.delivery_city)}, ${esc(o.delivery_governorate)}</span></div>
-            <div class="pills">${pill(STATUS, o.fulfillment_status)}${pill(PAY, o.payment_status)}</div>
+            <div class="pills">${pill(STATUS, o.fulfillment_status)}${pill(PAY, o.payment_status)}${o.order_source && o.order_source !== 'website' ? `<span class="pill">${esc(SOURCE[o.order_source] || o.order_source)}</span>` : ''}</div>
             ${['confirmed', 'processing'].includes(o.fulfillment_status) ? `<div class="quick">
+              <button class="btn btn-sm btn-ghost" data-label="${o.id}" title="Print 4×6 label">${I.printer} Label</button>
               <a class="btn btn-sm qa-wa" href="${waUrl(o.customer_phone, confirmMsg(o))}" target="_blank" rel="noopener" data-stop>${I.wa} Confirm</a>
               <a class="btn btn-sm btn-ghost" href="tel:${esc(o.customer_phone)}" data-stop>${I.phone} Call</a>
               ${o.fulfillment_status === 'confirmed' && (o.payment_method === 'cod' || o.payment_status === 'paid') ? `<button class="btn btn-sm btn-primary" data-quick-set="processing" data-id="${o.id}">Start packing</button>` : ''}
@@ -241,14 +243,104 @@
           </div>`).join('') : `<div class="empty"><h3>No orders here</h3><p>${tab === 'to_ship' ? 'Nothing waiting to be shipped right now.' : 'Try another tab or search.'}</p></div>`;
       } catch (e) { $('#oList').innerHTML = `<div class="empty"><h3>Couldn't load orders</h3><p>${esc(e.message)}</p></div>`; }
     }
+    $('#oNew').onclick = () => newOrderSheet(load);
+    $('#oBatchLabels').onclick = e => busy(e.currentTarget, async () => {
+      const r = await api('/api/admin/orders?limit=100&tab=to_ship');
+      const ids = r.data.filter(o => o.payment_method !== 'thawani' || o.payment_status === 'paid').map(o => o.id);
+      if (!ids.length) throw new Error('No orders waiting to ship.');
+      await printOrderLabels(ids);
+    }).catch(err => toast(err.message, 'error'));
     $('#oList').onclick = e => {
       if (e.target.closest('[data-stop]')) return;
+      const lb = e.target.closest('[data-label]');
+      if (lb) { printOrderLabels([lb.dataset.label]).catch(err => toast(err.message, 'error')); return; }
       const q = e.target.closest('[data-quick-set]');
       if (q) { busy(q, async () => { await api(`/api/admin/orders/${q.dataset.id}/status`, { method: 'PUT', body: { fulfillmentStatus: q.dataset.quickSet } }); toast('Order updated'); load(); }).catch(err => toast(err.message, 'error')); return; }
       const r = e.target.closest('[data-order]'); if (r) openOrder(r.dataset.order, load);
     };
     window.GMG_reloadOrders = load;
     load();
+  }
+
+  const SOURCE = { whatsapp: 'WhatsApp', phone: 'Phone', instagram: 'Instagram', walk_in: 'Walk-in' };
+  let shopInfo = null;
+  async function shopForLabel() {
+    if (shopInfo) return shopInfo;
+    const s = (await api('/api/admin/settings')).data;
+    const v = (c, k) => ((s[c] || {})[k] || {}).value || '';
+    // Logo embedded as data so the print window never waits for (or misses) the image
+    let logo = '/images/brand/logo-stacked.png';
+    try { const blob = await fetch(logo).then(r => r.blob()); logo = await new Promise(res => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsDataURL(blob); }); } catch (e) { /* keep the URL */ }
+    shopInfo = { name: v('general', 'store_name') || 'Global Markets Gateway', address: v('contact', 'store_address'), phone: v('contact', 'contact_phone'), cr: v('general', 'store_cr_number'), logo };
+    return shopInfo;
+  }
+  /** 4×6 thermal labels for one or more orders */
+  async function printOrderLabels(ids) {
+    const win = window.open('', '_blank'); // open now (inside the tap) so pop-up blockers allow it
+    try {
+      const [shop, ...orders] = await Promise.all([shopForLabel(), ...ids.map(id => api(`/api/admin/orders/${encodeURIComponent(id)}`).then(r => r.data))]);
+      window.GMG_label.printLabels(orders, shop, win);
+    } catch (e) { if (win) win.close(); throw e; }
+  }
+
+  // ---------- New order (WhatsApp / phone / walk-in) ----------
+  async function newOrderSheet(onDone) {
+    openSheet('New order', '<div class="skel" style="height:300px"></div>');
+    let products = [], govs = [];
+    try {
+      const [p, c] = await Promise.all([api('/api/products?limit=200'), api('/api/checkout/config')]);
+      products = p.data.filter(x => x.available !== false);
+      govs = c.data.governorates;
+    } catch (e) { toast(e.message, 'error'); closeSheet(); return; }
+    const vatRate = 0.05;
+    const incl = p => p.pricing.vat_included ? p.pricing.current_baisa : Math.round(p.pricing.current_baisa * (1 + vatRate));
+    const qty = {}; const price = {};
+    const total = () => products.reduce((s, p) => s + (qty[p.sku] || 0) * (price[p.sku] != null ? price[p.sku] : incl(p)), 0);
+    openSheet('New order', `<div class="card card-pad" id="nForm"><div class="fgrid" style="grid-template-columns:minmax(0,1fr)">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">
+        <div class="f"><label for="nSource">Order came from</label><select id="nSource"><option value="whatsapp">WhatsApp</option><option value="phone">Phone call</option><option value="instagram">Instagram</option><option value="walk_in">Walk-in</option></select></div>
+        <div class="f"><label for="nPay">Payment</label><select id="nPay"><option value="cod">Cash on delivery</option><option value="bank_transfer">Bank transfer (paid)</option><option value="cash">Cash (paid)</option></select></div>
+      </div>
+      <div class="f"><label for="nName">Customer name</label><input id="nName" autocomplete="off"></div>
+      <div class="f"><label for="nPhone">Mobile</label><div class="money"><span>+968</span><input id="nPhone" inputmode="tel" placeholder="9123 4567"></div></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">
+        <div class="f"><label for="nGov">Governorate</label><select id="nGov"><option value="">Select…</option>${govs.map(g => `<option value="${esc(g.code)}">${esc(g.name_en)}</option>`).join('')}</select></div>
+        <div class="f"><label for="nArea">Area / address</label><input id="nArea" placeholder="Al Khuwair, way 3021, villa 12"></div>
+      </div>
+      <div class="f"><label for="nNotes">Notes <span class="hint">(optional, printed on the label)</span></label><input id="nNotes"></div>
+      <div class="f"><label>Products <span class="hint">— price includes VAT; change it for a special deal</span></label>
+        <div class="list">${products.map(p => `<div class="row" style="flex-wrap:wrap;align-items:center" data-sku="${esc(p.sku)}">
+          <span class="thumb"><img src="${thumb(p.primary_image)}" alt=""></span>
+          <div class="grow" style="min-width:150px"><div class="title">${esc(p.name)}</div><div class="meta">${esc(p.sku)}${p.pricing.offer ? ' · offer' : ''}</div></div>
+          <div class="end" style="display:flex;gap:6px;align-items:center;margin-inline-start:auto">
+            <div class="money" style="width:112px"><span>OMR</span><input data-np inputmode="decimal" placeholder="${(incl(p) / 1000).toFixed(3)}"></div>
+            <button class="btn btn-sm btn-ghost" data-nq="-1" style="width:36px;padding:0">−</button><b data-nqv style="min-width:18px;text-align:center">0</b><button class="btn btn-sm btn-ghost" data-nq="1" style="width:36px;padding:0">+</button>
+          </div></div>`).join('')}</div></div>
+      <div class="sum-line" style="display:flex;justify-content:space-between;font-size:16px;padding-top:6px;border-top:1px solid var(--line)"><span>Total (free delivery)</span><b id="nTotal">OMR 0.000</b></div>
+    </div></div>`, `<span class="spacer"></span><button class="btn btn-ghost" data-close-sheet>Cancel</button><button class="btn btn-primary" id="nSave" data-busy="Saving">Create order</button>`);
+    const sheet = $('#nForm');
+    const refresh = () => { $('#nTotal').textContent = omr(total()); };
+    sheet.addEventListener('click', e => {
+      const b = e.target.closest('[data-nq]'); if (!b) return;
+      const row = b.closest('[data-sku]'); const sku = row.dataset.sku;
+      const p = products.find(x => x.sku === sku);
+      qty[sku] = Math.max(0, Math.min((qty[sku] || 0) + Number(b.dataset.nq), p.max_qty || 99));
+      $('[data-nqv]', row).textContent = qty[sku]; refresh();
+    });
+    sheet.addEventListener('input', e => {
+      const i = e.target.closest('[data-np]'); if (!i) return;
+      const sku = i.closest('[data-sku]').dataset.sku; const v = parseFloat(i.value);
+      price[sku] = i.value.trim() === '' || isNaN(v) ? null : Math.round(v * 1000); refresh();
+    });
+    $('#nSave').onclick = e => busy(e.currentTarget, async () => {
+      const items = Object.entries(qty).filter(([, q]) => q > 0).map(([sku, q]) => ({ sku, quantity: q, priceBaisa: price[sku] != null ? price[sku] : undefined }));
+      const r = await api('/api/admin/orders/manual', { method: 'POST', body: {
+        source: $('#nSource').value, paymentMethod: $('#nPay').value, customerName: $('#nName').value, customerPhone: $('#nPhone').value,
+        governorate: $('#nGov').value, deliveryArea: $('#nArea').value, notes: $('#nNotes').value, items } });
+      closeSheet(); onDone && onDone();
+      toast(`Order ${r.orderNumber} created · ${r.total_formatted}`);
+      openOrder(r.id, onDone);
+    }).catch(err => toast(err.message, 'error'));
   }
 
   async function openOrder(id, onChange) {
@@ -277,7 +369,7 @@
       <div class="card card-pad section">
         <h3 style="margin-bottom:12px">Customer</h3>
         <dl class="kv"><dt>Name</dt><dd>${esc(o.customer_name)}</dd><dt>Phone</dt><dd>${esc(o.customer_phone)}</dd>${o.customer_email ? `<dt>Email</dt><dd>${esc(o.customer_email)}</dd>` : ''}<dt>Address</dt><dd>${esc(o.delivery_address)}<br>${esc(o.delivery_city)}, ${esc(o.delivery_governorate)}</dd>${o.customer_notes ? `<dt>Notes</dt><dd>${esc(o.customer_notes)}</dd>` : ''}</dl>
-        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">${!cancelled ? `<a class="btn btn-sm qa-wa" href="${waUrl(phone, confirmMsg(o, o.items))}" target="_blank" rel="noopener">${I.wa} Confirm on WhatsApp</a>` : ''}<a class="btn btn-sm btn-ghost" href="https://wa.me/${phone}?text=${waMsg}" target="_blank" rel="noopener">${I.wa} Message</a><a class="btn btn-sm btn-ghost" href="tel:+${phone}">${I.phone} Call</a></div>
+        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">${!cancelled ? `<a class="btn btn-sm qa-wa" href="${waUrl(phone, confirmMsg(o, o.items))}" target="_blank" rel="noopener">${I.wa} Confirm on WhatsApp</a>` : ''}<a class="btn btn-sm btn-ghost" href="https://wa.me/${phone}?text=${waMsg}" target="_blank" rel="noopener">${I.wa} Message</a><a class="btn btn-sm btn-ghost" href="tel:+${phone}">${I.phone} Call</a>${!cancelled && !awaitingPay ? `<button class="btn btn-sm btn-ghost" id="oLabel">${I.printer} Print label</button>` : ''}</div>
       </div>
       <div class="card card-pad section">
         <h3 style="margin-bottom:6px">Items</h3>
@@ -308,6 +400,8 @@
     $$('[data-set]', sheet).forEach(b => b.onclick = () => update({ fulfillmentStatus: b.dataset.set }, b));
     $$('[data-pay]', sheet).forEach(b => b.onclick = () => update({ paymentStatus: b.dataset.pay }, b));
     const man = $('#oManual'); if (man) man.onchange = () => man.value && update({ fulfillmentStatus: man.value });
+    const lab = $('#oLabel');
+    if (lab) lab.onclick = () => printOrderLabels([o.id]).catch(e => toast(e.message, 'error'));
     const del = $('#oDelete');
     if (del) del.onclick = () => confirm(`Delete order ${o.order_number} permanently? This cannot be undone.${o.payment_status === 'paid' ? ' It was PAID — any refund must be done in Thawani.' : ''}${cancelled ? '' : ' Its items go back into website stock.'}`) && busy(del, async () => { await api(`/api/admin/orders/${o.id}${o.payment_status === 'paid' ? '?confirmPaid=1' : ''}`, { method: 'DELETE' }); toast(`Order ${o.order_number} deleted`); closeSheet(); onChange && onChange(); }).catch(e => toast(e.message, 'error'));
     const retry = $('#oRetry'); if (retry) retry.onclick = () => busy(retry, async () => { const r = await api(`/api/admin/orders/${o.id}/sync-odoo`, { method: 'POST' }); toast(r.message, r.success ? '' : 'error'); openOrder(o.id, onChange); }).catch(e => toast(e.message, 'error'));

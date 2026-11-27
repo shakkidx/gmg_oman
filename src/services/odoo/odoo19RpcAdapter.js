@@ -225,7 +225,8 @@ class Odoo19RpcAdapter extends OdooAdapterInterface {
       deliveryCity,
       deliveryAddress,
       items,
-      paymentMethod
+      paymentMethod,
+      orderSource
     } = orderData;
 
     // 1. Idempotency check: Look for existing sale order with this client_order_ref
@@ -314,7 +315,7 @@ class Odoo19RpcAdapter extends OdooAdapterInterface {
       client_order_ref: orderNumber,
       origin: `Website Checkout #${orderNumber}`,
       payment_term_id: false,
-      note: `Payment Method: ${paymentMethod === 'cod' ? 'Cash on Delivery (COD)' : 'Thawani Online Gateway (PAID)'} | Delivery: ${deliveryGovernorate}, ${deliveryCity}`,
+      note: `Payment Method: ${({ cod: 'Cash on Delivery (COD)', thawani: 'Thawani Online Gateway (PAID)', bank_transfer: 'Bank Transfer (PAID)', cash: 'Cash (PAID)' }[paymentMethod] || paymentMethod)} | Delivery: ${deliveryGovernorate}, ${deliveryCity}${orderSource && orderSource !== 'website' ? ` | Order via ${orderSource}` : ''}`,
       order_line: orderLines
     };
 

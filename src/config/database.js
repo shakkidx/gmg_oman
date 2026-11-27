@@ -70,6 +70,7 @@ function initializeDatabase() {
   // Meta Conversions API: Purchase sent once per order
   addColumn('orders', 'capi_purchase_sent', 'INTEGER DEFAULT 0');
   addColumn('orders', 'tracking_json', 'TEXT');
+  addColumn('orders', 'order_source', "TEXT DEFAULT 'website'"); // website | whatsapp | phone | walk_in
   return db;
 }
 

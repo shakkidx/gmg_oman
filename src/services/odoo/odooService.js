@@ -252,6 +252,7 @@ class OdooService {
         totalBaisa: order.total_baisa,
         paymentMethod: order.payment_method,
         paymentStatus: order.payment_status,
+        orderSource: order.order_source || 'website',
         idempotencyKey: order.idempotency_key
       };
 
